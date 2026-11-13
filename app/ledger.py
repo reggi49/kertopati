@@ -25,6 +25,7 @@ class ChainOfCustodyLedger:
                     block_index INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
                     filename TEXT NOT NULL,
+                    file_format TEXT NOT NULL DEFAULT 'PDF',
                     doc_sha256 TEXT NOT NULL,
                     source_unit TEXT NOT NULL,
                     target_unit TEXT NOT NULL,
@@ -35,6 +36,9 @@ class ChainOfCustodyLedger:
                 )
                 """
             )
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(custody_blocks)").fetchall()]
+            if "file_format" not in cols:
+                conn.execute("ALTER TABLE custody_blocks ADD COLUMN file_format TEXT NOT NULL DEFAULT 'PDF'")
             conn.commit()
 
     def _get_last_hash(self, conn: sqlite3.Connection) -> str:
@@ -52,6 +56,7 @@ class ChainOfCustodyLedger:
         target_unit: str,
         bsre_status: str,
         verdict: str,
+        file_format: str = "PDF",
     ) -> dict:
         doc_sha256 = hashlib.sha256(raw_bytes).hexdigest()
         timestamp = datetime.now(timezone.utc).isoformat()
@@ -62,6 +67,7 @@ class ChainOfCustodyLedger:
                 {
                     "timestamp": timestamp,
                     "filename": filename,
+                    "file_format": file_format,
                     "doc_sha256": doc_sha256,
                     "source_unit": source_unit,
                     "target_unit": target_unit,
@@ -75,12 +81,13 @@ class ChainOfCustodyLedger:
             conn.execute(
                 """
                 INSERT INTO custody_blocks
-                (timestamp, filename, doc_sha256, source_unit, target_unit, bsre_status, verdict, prev_hash, block_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (timestamp, filename, file_format, doc_sha256, source_unit, target_unit, bsre_status, verdict, prev_hash, block_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     timestamp,
                     filename,
+                    file_format,
                     doc_sha256,
                     source_unit,
                     target_unit,
@@ -95,6 +102,7 @@ class ChainOfCustodyLedger:
         return {
             "timestamp": timestamp,
             "filename": filename,
+            "file_format": file_format,
             "doc_sha256": doc_sha256,
             "source_unit": source_unit,
             "target_unit": target_unit,
@@ -139,6 +147,7 @@ class ChainOfCustodyLedger:
                 {
                     "timestamp": block["timestamp"],
                     "filename": block["filename"],
+                    "file_format": block.get("file_format", "PDF"),
                     "doc_sha256": block["doc_sha256"],
                     "source_unit": block["source_unit"],
                     "target_unit": block["target_unit"],
@@ -178,3 +187,49 @@ class ChainOfCustodyLedger:
             conn.execute("DELETE FROM custody_blocks")
             conn.execute("DELETE FROM sqlite_sequence WHERE name = 'custody_blocks'")
             conn.commit()
+
+    def simulate_tamper(self, block_index: int | None = None) -> dict:
+        """
+        Mensimulasikan manipulasi manual 1 field pada blok ledger (untuk demo uji tamper)
+        tanpa mengubah block_hash, sehingga verify_chain() mendeteksi kerusakan rantai.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            if block_index is not None:
+                row = conn.execute(
+                    "SELECT * FROM custody_blocks WHERE block_index = ?",
+                    (block_index,),
+                ).fetchone()
+            else:
+                # Prioritaskan Hop 2 (block_index=2) jika ada, jika tidak ambil blok terakhir
+                row = conn.execute(
+                    "SELECT * FROM custody_blocks WHERE block_index = 2"
+                ).fetchone()
+                if row is None:
+                    row = conn.execute(
+                        "SELECT * FROM custody_blocks ORDER BY block_index DESC LIMIT 1"
+                    ).fetchone()
+
+            if row is None:
+                return {"error": "Belum ada blok di ledger untuk disimulasikan tamper."}
+
+            target_idx = row["block_index"]
+            original_verdict = row["verdict"]
+            tampered_verdict = (
+                original_verdict + " [PAYLOAD_SISIPAN_TAMPERED]"
+                if "[PAYLOAD_SISIPAN_TAMPERED]" not in original_verdict
+                else original_verdict + "!"
+            )
+            conn.execute(
+                "UPDATE custody_blocks SET verdict = ? WHERE block_index = ?",
+                (tampered_verdict, target_idx),
+            )
+            conn.commit()
+
+        verification = self.verify_chain()
+        return {
+            "tampered_block_index": target_idx,
+            "original_verdict": original_verdict,
+            "tampered_verdict": tampered_verdict,
+            "verification": verification,
+        }
