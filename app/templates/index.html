@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SandiSeal — Zero-Trust Document &amp; BSrE Shield</title>
+  <style>
+    :root { --bg:#0b1120; --card:#111827; --border:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --green:#10b981; --red:#ef4444; --blue:#3b82f6; --amber:#f59e0b; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin:0; background:var(--bg); color:var(--text); padding:24px; }
+    .wrap { max-width:1200px; margin:0 auto; }
+    header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:24px; }
+    h1 { margin:0; font-size:22px; }
+    .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+    .header-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+    .card h2 { margin:0 0 12px; font-size:16px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+    .btn { padding:10px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:13px; margin-right:8px; margin-bottom:8px; text-decoration:none; display:inline-block; }
+    .btn-green { background:var(--green); color:#052e16; }
+    .btn-red { background:var(--red); color:#fff; }
+    .btn-blue { background:var(--blue); color:#fff; }
+    .btn-amber { background:rgba(245,158,11,.18); color:var(--amber); border:1px solid rgba(245,158,11,.45); margin:0; padding:7px 12px; font-size:12px; }
+    .btn-amber:hover { background:rgba(245,158,11,.3); }
+    input, select { width:100%; padding:9px; margin:6px 0 12px; background:#0f172a; color:var(--text); border:1px solid var(--border); border-radius:8px; }
+    pre { background:#020617; padding:12px; border-radius:8px; overflow-x:auto; font-size:12px; border:1px solid var(--border); color:#cbd5e1; }
+    table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    th, td { text-align:left; padding:8px; border-bottom:1px solid var(--border); }
+    th { color:var(--muted); font-weight:600; }
+    .badge { padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; letter-spacing:0.3px; }
+    .ok { background:rgba(16,185,129,.18); color:var(--green); border:1px solid rgba(16,185,129,.35); }
+    .bad { background:rgba(239,68,68,.18); color:var(--red); border:1px solid rgba(239,68,68,.35); }
+    .warn { background:rgba(245,158,11,.18); color:var(--amber); border:1px solid rgba(245,158,11,.35); }
+
+    /* Zero-Trust Flow Visualization */
+    .flow-wrap { display:grid; grid-template-columns:1fr auto 1.2fr auto 1.3fr; gap:12px; align-items:center; margin-top:8px; }
+    .flow-node { background:#0f172a; border:1px solid var(--border); border-radius:10px; padding:12px; transition:all 0.25s ease; }
+    .flow-node .node-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+    .flow-node .node-desc { font-size:11.5px; color:var(--muted); }
+    .flow-arrow { text-align:center; font-size:18px; color:var(--muted); font-weight:700; }
+    .flow-branches { display:flex; flex-direction:column; gap:10px; }
+    .flow-node.active-clean { border-color:var(--green); background:rgba(16,185,129,.12); box-shadow:0 0 14px rgba(16,185,129,.22); }
+    .flow-node.active-clean .node-title { color:var(--green); }
+    .flow-node.active-infected { border-color:var(--red); background:rgba(239,68,68,.12); box-shadow:0 0 14px rgba(239,68,68,.22); }
+    .flow-node.active-infected .node-title { color:var(--red); }
+    .flow-node.dimmed { opacity:0.45; }
+    .flow-arrow.lit-green { color:var(--green); }
+    .flow-arrow.lit-red { color:var(--red); }
+    .cdr-bar { margin-top:12px; padding:10px 12px; border-radius:8px; background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.35); display:none; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns:1fr; }
+      .flow-wrap { grid-template-columns:1fr; }
+      .flow-arrow { transform:rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>SandiSeal — Zero-Trust Document &amp; BSrE Integrity Shield</h1>
+      <div class="sub">Audit /ByteRange BSrE • SHA-256 Chain of Custody (Kodim → Korem → Pusat) • CDR Sanitizer • Stealth Auto-Sandbox &amp; Vaksin YARA</div>
+    </div>
+    <div class="header-actions">
+      <span id="chainIntegrityBadge" class="badge {{ 'ok' if ledger_verification.valid else 'bad' }}">
+        CHAIN INTEGRITY: {{ ledger_verification.status }}
+      </span>
+      <span class="badge ok">ON-PREMISE / ZERO CLOUD LEAK</span>
+      <button class="btn btn-amber" onclick="resetDemoData()">Reset Demo Data</button>
+    </div>
+  </header>
+
+  <!-- Visualisasi Alur Zero-Trust -->
+  <div class="card" style="margin-bottom:20px;">
+    <h2>
+      <span>Alur Zero-Trust (Kodim → Korem → Pusat)</span>
+      <span id="flowStatusBadge" class="badge warn">MENUNGGU DOKUMEN</span>
+    </h2>
+    <div class="flow-wrap">
+      <div id="nodeKodim" class="flow-node">
+        <div class="node-title">1. Kodim (Pengirim)</div>
+        <div class="node-desc" id="nodeKodimDesc">Mengirim surat dinas PDF</div>
+      </div>
+      <div id="arrow1" class="flow-arrow">→</div>
+      <div id="nodeKorem" class="flow-node">
+        <div class="node-title">2. Korem (Gateway Audit &amp; CDR)</div>
+        <div class="node-desc" id="nodeKoremDesc">Cek /ByteRange BSrE, Objek Aktif &amp; Vaksin YARA</div>
+      </div>
+      <div id="arrow2" class="flow-arrow">→</div>
+      <div class="flow-branches">
+        <div id="nodePusat" class="flow-node">
+          <div class="node-title">3A. Pusat / PUSSIBERAD</div>
+          <div class="node-desc" id="nodePusatDesc">Dokumen bersih &amp; hasil sanitasi CDR diteruskan</div>
+        </div>
+        <div id="nodeSandbox" class="flow-node">
+          <div class="node-title">3B. Stealth Auto-Sandbox &amp; Vaksin</div>
+          <div class="node-desc" id="nodeSandboxDesc">Dibelokkan senyap (Plasebo) &amp; terbitkan aturan YARA</div>
+        </div>
+      </div>
+    </div>
+    <div id="cdrDownloadBar" class="cdr-bar">
+      <div style="font-size:12.5px;">
+        <strong>CDR Selesai:</strong> <span id="cdrSummaryText">Dokumen telah direkonstruksi ulang (steril).</span>
+      </div>
+      <a id="downloadSanitizedBtn" class="btn btn-green" style="margin:0;" href="#" download>Unduh PDF Hasil Sanitasi (CDR)</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1. Uji Kirim Dokumen (Simulasi 1-Klik &amp; Upload)</h2>
+      <div style="margin-bottom:12px;">
+        <button class="btn btn-green" onclick="runDemo('clean')">Demo 1: Kirim PDF BSrE Bersih</button>
+        <button class="btn btn-red" onclick="runDemo('infected')">Demo 2: Kirim PDF Terinfeksi (/OpenAction + Shadow Update)</button>
+      </div>
+      <form id="uploadForm" onsubmit="uploadManual(event)">
+        <label style="font-size:12px;color:var(--muted)">Satuan Asal</label>
+        <input type="text" id="sourceUnit" value="Kodim 0606/Kota Bogor" />
+        <label style="font-size:12px;color:var(--muted)">Jalur Tujuan</label>
+        <input type="text" id="targetUnit" value="Korem 061/Suryakencana -> PUSSIBERAD" />
+        <input type="file" id="pdfFile" accept=".pdf" required />
+        <button class="btn btn-blue" type="submit">Kirim &amp; Audit PDF</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>2. Perbandingan Tampilan: Pengirim (Plasebo) vs SOC PUSSIBERAD</h2>
+      <div style="font-size:12px;color:var(--muted)">Respons ke Pengirim (Agar pelaku tidak curiga):</div>
+      <pre id="senderOut">Belum ada transaksi.</pre>
+      <div style="font-size:12px;color:var(--muted)">Telemetri Real-Time SOC Command Center:</div>
+      <pre id="socOut">Menunggu inspeksi dokumen...</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <h2>
+      <span>3. Immutable SHA-256 Chain of Custody Ledger (Kodim → Korem → Pusat)</span>
+      <button class="btn btn-amber" onclick="verifyLedgerNow()">Verifikasi Ulang Rantai</button>
+    </h2>
+    <table>
+      <thead><tr><th>#</th><th>Dokumen</th><th>Jalur Satuan</th><th>Status BSrE</th><th>Keputusan</th><th>SHA-256 Dokumen</th></tr></thead>
+      <tbody id="ledgerBody">
+        {% for b in blocks %}
+        <tr>
+          <td>{{ b.block_index }}</td>
+          <td>{{ b.filename }}</td>
+          <td>{{ b.source_unit }} → {{ b.target_unit }}</td>
+          <td>{{ b.bsre_status }}</td>
+          <td><span class="badge {{ 'ok' if 'CLEAN' in b.verdict else 'bad' }}">{{ b.verdict }}</span></td>
+          <td><code>{{ b.doc_sha256[:18] }}...</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>4. Auto-Sandbox Quarantine (Plasebo Detonation)</h2>
+      <div id="sandboxList">
+        {% for e in sandbox_events %}
+        <pre>File: {{ e.filename }} | IOC: {{ e.extracted_ioc }}
+Alasan: {{ e.reasons | join('; ') }}
+Vaksin Terbit: {{ e.generated_vaccine }}</pre>
+        {% else %}
+        <div class="sub">Belum ada file yang dikarantina ke Auto-Sandbox.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>5. Vaksin Aktif (Auto-Generated YARA Rules)</h2>
+      <div id="vaccineList">
+        {% for v in vaccines %}
+        <pre>{{ v.yara_preview }}</pre>
+        {% else %}
+        <div class="sub">Belum ada aturan YARA yang diterbitkan.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function runDemo(type) {
+  const res = await fetch(`/api/demo/${type}`, { method: 'POST' });
+  const data = await res.json();
+  renderResult(data);
+  await refreshState();
+}
+
+async function uploadManual(e) {
+  e.preventDefault();
+  const fd = new FormData();
+  fd.append('file', document.getElementById('pdfFile').files[0]);
+  fd.append('source_unit', document.getElementById('sourceUnit').value);
+  fd.append('target_unit', document.getElementById('targetUnit').value);
+  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+  renderResult(data);
+  await refreshState();
+}
+
+async function resetDemoData() {
+  const res = await fetch('/api/demo/reset', { method: 'POST' });
+  const data = await res.json();
+  document.getElementById('senderOut').textContent = 'Belum ada transaksi.';
+  document.getElementById('socOut').textContent = data.message || 'Data demo direset.';
+  resetFlowDiagram();
+  await refreshState();
+}
+
+async function verifyLedgerNow() {
+  const res = await fetch('/api/ledger/verify');
+  const v = await res.json();
+  updateIntegrityBadge(v);
+}
+
+function updateIntegrityBadge(v) {
+  const badge = document.getElementById('chainIntegrityBadge');
+  badge.textContent = `CHAIN INTEGRITY: ${v.status}`;
+  badge.className = `badge ${v.valid ? 'ok' : 'bad'}`;
+}
+
+function resetFlowDiagram() {
+  ['nodeKodim', 'nodeKorem', 'nodePusat', 'nodeSandbox'].forEach(id => {
+    document.getElementById(id).className = 'flow-node';
+  });
+  ['arrow1', 'arrow2'].forEach(id => {
+    document.getElementById(id).className = 'flow-arrow';
+  });
+  const flowBadge = document.getElementById('flowStatusBadge');
+  flowBadge.className = 'badge warn';
+  flowBadge.textContent = 'MENUNGGU DOKUMEN';
+  document.getElementById('cdrDownloadBar').style.display = 'none';
+}
+
+function updateFlowDiagram(soc) {
+  resetFlowDiagram();
+  if (!soc || !soc.verdict) return;
+
+  const nodeKodim = document.getElementById('nodeKodim');
+  const nodeKorem = document.getElementById('nodeKorem');
+  const nodePusat = document.getElementById('nodePusat');
+  const nodeSandbox = document.getElementById('nodeSandbox');
+  const arrow1 = document.getElementById('arrow1');
+  const arrow2 = document.getElementById('arrow2');
+  const flowBadge = document.getElementById('flowStatusBadge');
+
+  if (soc.verdict === 'CLEAN') {
+    nodeKodim.classList.add('active-clean');
+    nodeKorem.classList.add('active-clean');
+    nodePusat.classList.add('active-clean');
+    nodeSandbox.classList.add('dimmed');
+    arrow1.classList.add('lit-green');
+    arrow2.classList.add('lit-green');
+    flowBadge.className = 'badge ok';
+    flowBadge.textContent = 'LOLOS & DISANITASI (CDR) → PUSAT';
+
+    if (soc.cdr && soc.cdr.download_url) {
+      const bar = document.getElementById('cdrDownloadBar');
+      const btn = document.getElementById('downloadSanitizedBtn');
+      const summary = document.getElementById('cdrSummaryText');
+      btn.href = soc.cdr.download_url;
+      btn.setAttribute('download', soc.cdr.sanitized_filename);
+      summary.textContent = `${soc.cdr.sanitized_filename} (${soc.cdr.page_count} halaman, SHA-256: ${soc.cdr.sanitized_sha256.slice(0, 14)}...)`;
+      bar.style.display = 'flex';
+    }
+  } else {
+    nodeKodim.classList.add('active-infected');
+    nodeKorem.classList.add('active-infected');
+    nodeSandbox.classList.add('active-infected');
+    nodePusat.classList.add('dimmed');
+    arrow1.classList.add('lit-red');
+    arrow2.classList.add('lit-red');
+    flowBadge.className = 'badge bad';
+    flowBadge.textContent = 'DIBELOKKAN SENYAP → AUTO-SANDBOX';
+  }
+}
+
+function renderResult(data) {
+  document.getElementById('senderOut').textContent = JSON.stringify(data.sender_view || data, null, 2);
+  document.getElementById('socOut').textContent = JSON.stringify(data.soc_view || data, null, 2);
+  updateFlowDiagram(data.soc_view);
+}
+
+async function refreshState() {
+  const res = await fetch('/api/state');
+  const st = await res.json();
+  if (st.ledger_verification) {
+    updateIntegrityBadge(st.ledger_verification);
+  }
+  const tbody = document.getElementById('ledgerBody');
+  tbody.innerHTML = st.blocks.map(b => `
+    <tr>
+      <td>${b.block_index}</td>
+      <td>${b.filename}</td>
+      <td>${b.source_unit} → ${b.target_unit}</td>
+      <td>${b.bsre_status}</td>
+      <td><span class="badge ${b.verdict.includes('CLEAN') ? 'ok' : 'bad'}">${b.verdict}</span></td>
+      <td><code>${b.doc_sha256.slice(0,18)}...</code></td>
+    </tr>`).join('');
+  document.getElementById('sandboxList').innerHTML = st.sandbox_events.length
+    ? st.sandbox_events.map(e => `<pre>File: ${e.filename} | IOC: ${e.extracted_ioc}\nAlasan: ${e.reasons.join('; ')}\nVaksin Terbit: ${e.generated_vaccine}</pre>`).join('')
+    : '<div class="sub">Belum ada file yang dikarantina ke Auto-Sandbox.</div>';
+  document.getElementById('vaccineList').innerHTML = st.vaccines.length
+    ? st.vaccines.map(v => `<pre>${v.yara_preview}</pre>`).join('')
+    : '<div class="sub">Belum ada aturan YARA yang diterbitkan.</div>';
+}
+</script>
+</body>
+</html>
