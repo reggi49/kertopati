@@ -87,6 +87,30 @@
     .hash-badge { display:inline-block; padding:3px 8px; border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; font-weight:700; border:1px solid rgba(255,255,255,0.18); }
     .broken-banner { margin-top:8px; padding:6px 10px; border-radius:6px; border:1px dashed var(--red); background:rgba(239,68,68,.18); color:#fca5a5; font-size:11.5px; font-weight:700; text-align:center; }
 
+    /* Tab 2 Simplified 2-Step Guide, Status Bar & Horizontal 3-Block Chain */
+    .tab2-status-bar { display:flex; justify-content:space-between; align-items:safe center; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:#070f21; margin-bottom:14px; }
+    .chain-status-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:800; letter-spacing:.3px; border:1px solid transparent; }
+    .chain-status-pill.ok { background:rgba(16,185,129,.18); color:#6ee7b7; border-color:rgba(16,185,129,.55); }
+    .chain-status-pill.bad { background:rgba(239,68,68,.22); color:#fca5a5; border-color:rgba(239,68,68,.65); }
+    .tab2-steps-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
+    .step-guide-card { display:flex; flex-direction:column; gap:8px; padding:14px; border-radius:10px; border:1px solid var(--border); background:#091225; min-inline-size:0; }
+    .step-guide-card header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .step-guide-card h3 { margin:0; font-size:14px; color:#f8fafc; }
+    .step-guide-card p { margin:0; font-size:12.5px; color:#cbd5e1; line-height:1.48; flex:1; }
+    .step-guide-card footer { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding-top:4px; }
+    .chain-visual-wrap { margin:10px 0 16px; padding:12px; border-radius:10px; border:1px solid var(--border); background:#070f21; }
+    .chain-visual-strip { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap:10px; align-items:center; }
+    @media (max-width:900px) { .chain-visual-strip { grid-template-columns:1fr; } .chain-arrow { justify-self:center; } }
+    .chain-node { background:#0b152a; border:1px solid rgba(16,185,129,.45); border-radius:9px; padding:10px 12px; min-inline-size:0; }
+    .chain-node.tampered { border-color:rgba(239,68,68,.75); background:rgba(239,68,68,.12); }
+    .chain-node-head { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px; font-size:11.5px; font-weight:800; color:#e2e8f0; }
+    .chain-node-unit { font-size:12px; font-weight:700; color:#93c5fd; margin-bottom:3px; overflow-wrap:anywhere; }
+    .chain-node.tampered .chain-node-unit { color:#fca5a5; }
+    .chain-node-hash { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10.5px; color:#94a3b8; overflow-wrap:anywhere; }
+    .chain-arrow { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 9px; border-radius:999px; font-size:11px; font-weight:800; color:#6ee7b7; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.4); white-space:nowrap; }
+    .chain-arrow.broken { color:#fca5a5; background:rgba(239,68,68,.18); border:1.5px dashed #ef4444; }
+    .chain-tamper-explain { margin-top:10px; padding:9px 12px; border-radius:8px; border:1px solid rgba(239,68,68,.55); background:rgba(239,68,68,.12); color:#fecaca; font-size:12.5px; line-height:1.45; }
+
     /* Incident & Vaccine Cards */
     .item-card { border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; background:#0b1222; }
     .item-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
@@ -532,61 +556,58 @@
 
   <!-- TAB 2: Audit Ledger Blockchain & CDR -->
   <div id="tabPanel2" class="tab-panel">
-    <div class="grid" style="margin-bottom:16px;">
-      <div class="card">
-        <h2>Aksi Uji Ledger &amp; Sanitasi Dokumen Bersih (CDR)</h2>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Untuk simulasi serangan interaktif (PDF/JPEG/DOCX &amp; upload), buka tab <strong>Simulasi Cyber Attack (Docker Live)</strong>.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <button class="btn btn-blue" onclick="runMultiHop()">Simulasi 3-Hop (Kodim → Korem → Pusat)</button>
-          <button class="btn btn-amber" onclick="runTamper()">Simulasi Tamper di Korem</button>
-          <button class="btn btn-green" onclick="runDemo('clean')">Uji Cepat PDF BSrE Bersih (CDR Steril)</button>
-        </div>
-        <div id="cdrDownloadBar" class="cdr-bar">
-          <div style="font-size:12.5px;">
-            <strong>CDR Selesai:</strong> <span id="cdrSummaryText">Dokumen telah direkonstruksi ulang (steril).</span>
-          </div>
-          <a id="downloadSanitizedBtn" class="btn btn-green" style="margin:0;" href="#" download>Unduh Hasil Sanitasi (CDR)</a>
-        </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h2>Panduan Uji Ledger Blockchain &amp; Sanitasi Dokumen (CDR)</h2>
+      <div class="tab2-status-bar">
+        <span id="chainIntegrityBadge" class="chain-status-pill {{ 'ok' if ledger_verification.valid else 'bad' }}">
+          {% if ledger_verification.valid %}
+            CHAIN INTEGRITY: VERIFIED
+          {% else %}
+            CHAIN INTEGRITY: TAMPERED — BLOK #{{ ledger_verification.tampered_blocks[0].block_index if ledger_verification.tampered_blocks else '?' }} RUSAK
+          {% endif %}
+        </span>
+        <button type="button" class="btn btn-amber" style="margin:0;" onclick="verifyLedgerNow()">Verifikasi Ulang Rantai</button>
       </div>
 
-      <div class="card">
-        <h2>Ringkasan Layar Pengirim vs Keputusan SOC</h2>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Yang Dilihat Pengirim (Agar pelaku tidak curiga):</div>
-        <div id="senderSummaryCard" class="status-box">
-          <div class="status-icon icon-muted">•</div>
-          <div>
-            <div class="status-title">Belum ada pengiriman dokumen</div>
-            <div class="status-desc">Jalankan aksi di kiri atau selesaikan misi di Simulasi Cyber Attack.</div>
-          </div>
-        </div>
+      <div class="tab2-steps-grid">
+        <article class="step-guide-card">
+          <header>
+            <span class="badge ok">LANGKAH 1</span>
+            <h3>Kirim Rantai Bersih &amp; CDR Steril</h3>
+          </header>
+          <p>Mengirim surat dinas bersih berjenjang (<strong>Kodim 0606 → Korem 061 → PUSSIBERAD Pusat</strong>), mensterilkan dokumen lewat Content Disarm &amp; Reconstruction (CDR), lalu mencatat 3 blok hash SHA-256 ke Ledger.</p>
+          <footer>
+            <button type="button" id="btnTab2Multihop" class="btn btn-green" style="margin:0;" onclick="runMultiHop()">1. Kirim Rantai Dokumen Bersih (Kodim -&gt; Korem -&gt; Pusat + CDR)</button>
+          </footer>
+        </article>
 
-        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Ringkasan Keputusan SOC PUSSIBERAD:</div>
-        <div id="socSummaryCard" class="status-box">
-          <div class="status-icon icon-muted">•</div>
-          <div>
-            <div class="status-title">Menunggu inspeksi dokumen</div>
-            <div class="status-desc">Hasil audit dan status integritas rantai akan tampil di sini.</div>
-          </div>
-        </div>
+        <article class="step-guide-card">
+          <header>
+            <span class="badge warn">LANGKAH 2</span>
+            <h3>Uji Manipulasi Data di Korem</h3>
+          </header>
+          <p>Menyimulasikan perubahan paksa pada baris Ledger di <strong>Korem 061</strong> untuk membuktikan deteksi anti-tamper. Jika ledger masih 0 blok, sistem otomatis menjalankan Langkah 1 dulu sebelum menguji manipulasi.</p>
+          <footer>
+            <button type="button" id="btnTab2Tamper" class="btn btn-amber" style="margin:0;" onclick="runTamper()">2. Uji Manipulasi Data di Korem (Tamper Test)</button>
+          </footer>
+        </article>
+      </div>
 
-        <details class="tech-log">
-          <summary>Lihat Log Teknis (JSON)</summary>
-          <pre id="senderOut">Belum ada transaksi.</pre>
-          <pre id="socOut">Menunggu inspeksi dokumen...</pre>
-        </details>
+      <div id="cdrDownloadBar" class="cdr-bar">
+        <div style="font-size:12.5px;">
+          <strong>CDR Selesai:</strong> <span id="cdrSummaryText">Dokumen telah direkonstruksi ulang (steril).</span>
+        </div>
+        <a id="downloadSanitizedBtn" class="btn btn-green" style="margin:0;" href="#" download>Unduh PDF Steril CDR</a>
       </div>
     </div>
 
     <div class="card">
       <h2>
-        <span>Timeline Rantai Kustodi Blockchain (Kodim → Korem → Pusat)</span>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <span id="chainIntegrityBadge" class="badge {{ 'ok' if ledger_verification.valid else 'bad' }}">
-            CHAIN INTEGRITY: {{ ledger_verification.status }}
-          </span>
-          <button class="btn btn-amber" onclick="verifyLedgerNow()">Verifikasi Ulang Rantai</button>
-        </div>
+        <span>Visualisasi Rantai Kustodi &amp; Riwayat Ledger (Kodim → Korem → Pusat)</span>
       </h2>
+      <div id="chainVisualWrap" class="chain-visual-wrap">
+        <div class="sub">Memuat visualisasi 3 blok terbaru...</div>
+      </div>
       <div id="ledgerTimeline" class="timeline">
         {% for b in blocks %}
         <div class="tl-item">
@@ -606,6 +627,11 @@
               <span>→</span>
               <span class="hash-badge">Kunci Blok Ini: {{ b.block_hash[:8] }}</span>
             </div>
+            {% if 'AUTO-SANDBOX' in (b.verdict or '') or 'SANDBOX' in (b.verdict or '') %}
+            <div>
+              <button type="button" class="btn btn-amber btn-sm" style="margin:8px 0 0 0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button>
+            </div>
+            {% endif %}
           </div>
         </div>
         {% else %}
@@ -759,6 +785,7 @@
 <script>
 const KERTOPATI_API_TOKEN = {{ (api_token or '') | tojson }};
 let lastMissionReport = null;
+let latestLedgerBlocks = [];
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -779,6 +806,10 @@ document.addEventListener('click', (e) => {
   } else if (action === 'open-chronology') {
     const st = btn.getAttribute('data-step');
     openChronologyDialog(st ? Number(st) : null);
+  } else if (action === 'go-tab') {
+    const t = Number(btn.getAttribute('data-tab') || 3);
+    switchMainTab(t);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 });
 
@@ -841,6 +872,12 @@ async function runMultiHop() {
 
 async function runTamper() {
   await runMenuAction(async () => {
+    // Jika ledger masih 0 blok, jalankan Langkah 1 terlebih dahulu agar tidak pernah muncul error "Belum ada blok"
+    if (!latestLedgerBlocks || latestLedgerBlocks.length === 0) {
+      const seedRes = await fetch('/api/demo/multihop', { method: 'POST' });
+      const seedData = await seedRes.json();
+      renderMenuCdrBar(seedData.soc_view);
+    }
     const res = await fetch('/api/demo/tamper', { method: 'POST' });
     return res.json();
   });
@@ -883,12 +920,6 @@ async function resetDemoData() {
     placeboBox.className = 'status-box';
     placeboBox.innerHTML = '<div class="status-icon icon-muted">•</div><div><div class="status-title">Menunggu simulasi atau inspeksi</div><div class="status-desc">Data demo telah dibersihkan. Ringkasan Plasebo siap diperbarui otomatis.</div></div>';
   }
-  document.getElementById('senderOut').textContent = 'Belum ada transaksi.';
-  document.getElementById('socOut').textContent = data.message || 'Data demo direset.';
-  document.getElementById('senderSummaryCard').className = 'status-box';
-  document.getElementById('senderSummaryCard').innerHTML = '<div class="status-icon icon-muted">•</div><div><div class="status-title">Belum ada pengiriman dokumen</div><div class="status-desc">Data demo telah dibersihkan.</div></div>';
-  document.getElementById('socSummaryCard').className = 'status-box';
-  document.getElementById('socSummaryCard').innerHTML = '<div class="status-icon icon-muted">•</div><div><div class="status-title">Menunggu inspeksi dokumen</div><div class="status-desc">Sistem siap menerima dokumen uji baru.</div></div>';
   resetFlowDiagram();
   await refreshState();
 }
@@ -913,29 +944,32 @@ async function importVaccineBundle(e) {
   if (!file) return;
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch('/api/vaccines/import', { method: 'POST', body: fd });
-  const data = await res.json();
-  document.getElementById('socOut').textContent = JSON.stringify(data, null, 2);
+  await fetch('/api/vaccines/import', { method: 'POST', body: fd });
   e.target.value = '';
   await refreshState();
 }
 
 async function reviewSandbox(sha256Prefix, decision) {
-  const res = await fetch(`/api/sandbox/${encodeURIComponent(sha256Prefix)}/review`, {
+  await fetch(`/api/sandbox/${encodeURIComponent(sha256Prefix)}/review`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ decision })
   });
-  const data = await res.json();
-  document.getElementById('socOut').textContent = JSON.stringify(data, null, 2);
   await refreshState();
 }
 
 function updateIntegrityBadge(v) {
   const badge = document.getElementById('chainIntegrityBadge');
   if (!badge) return;
-  badge.textContent = `CHAIN INTEGRITY: ${v.status}`;
-  badge.className = `badge ${v.valid ? 'ok' : 'bad'}`;
+  if (v && v.valid) {
+    badge.textContent = 'CHAIN INTEGRITY: VERIFIED';
+    badge.className = 'chain-status-pill ok';
+  } else {
+    const firstBad = (v && v.tampered_blocks && v.tampered_blocks[0]) ? v.tampered_blocks[0] : null;
+    const idxTxt = firstBad && firstBad.block_index !== undefined ? ` — BLOK #${firstBad.block_index} RUSAK` : '';
+    badge.textContent = `CHAIN INTEGRITY: TAMPERED${idxTxt}`;
+    badge.className = 'chain-status-pill bad';
+  }
 }
 
 function resetFlowDiagram() {
@@ -958,12 +992,17 @@ function renderMenuCdrBar(soc) {
     const summary = document.getElementById('cdrSummaryText');
     btn.href = soc.cdr.download_url;
     btn.setAttribute('download', soc.cdr.sanitized_filename);
-    const origSize = soc.cdr.original_size_bytes ?? '-';
-    const sanSize = soc.cdr.sanitized_size_bytes ?? '-';
+    const origSize = Number(soc.cdr.original_size_bytes);
+    const sanSize = Number(soc.cdr.sanitized_size_bytes);
+    const hasSizes = Number.isFinite(origSize) && Number.isFinite(sanSize);
+    const diffBytes = hasSizes ? (origSize - sanSize) : 0;
+    const diffLabel = hasSizes
+      ? `Before: ${origSize} B → After Steril CDR: ${sanSize} B (Selisih: ${diffBytes >= 0 ? '-' : '+'}${Math.abs(diffBytes)} B)`
+      : 'Dokumen telah direkonstruksi ulang (steril)';
     const stripped = soc.cdr.stripped_elements || 'Metadata & struktur diverifikasi steril';
-    summary.textContent = `${soc.cdr.sanitized_filename} | Ukuran Asli: ${origSize} B → Hasil CDR Steril: ${sanSize} B | Dibersihkan: ${stripped}`;
+    summary.textContent = `${soc.cdr.sanitized_filename} | ${diffLabel} | Dibersihkan: ${stripped}`;
     cdrBar.style.display = 'flex';
-  } else {
+  } else if (soc && soc.verdict !== 'TAMPERED') {
     cdrBar.style.display = 'none';
   }
 }
@@ -1055,81 +1094,14 @@ function buildReportFromSummaryData(data) {
 }
 
 function renderSummaryCards(data) {
-  const senderCard = document.getElementById('senderSummaryCard');
-  const socCard = document.getElementById('socSummaryCard');
   const placeboBox = document.getElementById('placeboSummaryBox');
 
   if (data.error) {
-    senderCard.className = 'status-box bad-box';
-    senderCard.innerHTML = `<div class="status-icon icon-bad">!</div><div><div class="status-title">Pengiriman Ditolak</div><div class="status-desc">${escapeHtml(data.error)}</div></div>`;
-    socCard.className = 'status-box bad-box';
-    socCard.innerHTML = `<div class="status-icon icon-bad">!</div><div><div class="status-title">Validasi Keamanan</div><div class="status-desc">${escapeHtml(data.error)}</div></div>`;
     if (placeboBox) {
       placeboBox.className = 'status-box bad-box';
       placeboBox.innerHTML = `<div class="status-icon icon-bad">!</div><div><div class="status-title">Ditolak Gateway</div><div class="status-desc">${escapeHtml(data.error)}</div></div>`;
     }
     return;
-  }
-
-  const sv = data.sender_view || data.attacker_view || {};
-  const soc = data.soc_view || {};
-
-  if (data.protection_mode === 'WITHOUT_KERTOPATI') {
-    senderCard.className = 'status-box bad-box';
-    senderCard.innerHTML = `<div class="status-icon icon-bad">☠</div><div><div class="status-title">Penyerang Mendapat Akses Shell (${escapeHtml(data.cve_id || 'EXPLOIT')})</div><div class="status-desc">${escapeHtml(sv.message || 'Server konvensional tidak memblokir payload.')}</div></div>`;
-    socCard.className = 'status-box bad-box';
-    socCard.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">SERVER KOMPROMI (TANPA KERTOPATI)</div><div class="status-desc">${escapeHtml(soc.message || 'Zero visibility: Tidak ada Auto-Sandbox, CDR, maupun AI Vaccine.')}</div></div>`;
-    if (!data._skipPlaceboSync) {
-      renderPlaceboChronologyBox(buildReportFromSummaryData(data));
-    }
-    return;
-  }
-
-  if (sv.status === 'ALERT') {
-    senderCard.className = 'status-box warn-box';
-    senderCard.innerHTML = `<div class="status-icon icon-warn">!</div><div><div class="status-title">Simulasi Serangan Internal</div><div class="status-desc">${escapeHtml(sv.message)}</div></div>`;
-  } else {
-    senderCard.className = 'status-box ok-box';
-    senderCard.innerHTML = `<div class="status-icon icon-ok">✓</div><div><div class="status-title">Layar Pengirim (Plasebo): ${escapeHtml(sv.status || '200 OK')}</div><div class="status-desc">${escapeHtml(sv.message || 'Dokumen diterima di antrean. Pengirim tidak curiga sama sekali.')}</div></div>`;
-  }
-
-  if (soc.verdict === 'CLEAN') {
-    const cdr = soc.cdr || {};
-    const sizeTxt = cdr.original_size_bytes !== undefined
-      ? `Ukuran Asli: ${cdr.original_size_bytes} B → Steril CDR: ${cdr.sanitized_size_bytes} B`
-      : 'Dokumen steril siap diteruskan ke Pusat.';
-    socCard.className = 'status-box ok-box';
-    socCard.innerHTML = `<div class="status-icon icon-ok">🛡</div><div><div class="status-title">Aman &amp; Disterilkan CDR</div><div class="status-desc">${escapeHtml(sizeTxt)}</div></div>`;
-  } else if (soc.verdict === 'TAMPERED') {
-    socCard.className = 'status-box bad-box';
-    socCard.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">Peringatan: Rantai Ledger Dimodifikasi di Korem!</div><div class="status-desc">Integritas Blok #${escapeHtml(soc.tampered_block_index)} rusak karena isi data tidak lagi cocok dengan kunci SHA-256.</div></div>`;
-  } else {
-    const sb = soc.sandbox_event || {};
-    const ai = sb.ai_analysis || {};
-    const reasonsList = (soc.details && soc.details.reasons) ? soc.details.reasons : (sb.reasons || []);
-    const reasons = reasonsList.length ? reasonsList.slice(0, 2).join('; ') : 'Ancaman terdeteksi.';
-    const vac = sb.generated_vaccine ? ` | Vaksin terbit: ${sb.generated_vaccine}` : '';
-    const riskBadge = ai.risk_score !== undefined
-      ? `<span class="badge ${ai.risk_score >= 70 ? 'bad' : 'warn'}">Risk Score: ${escapeHtml(ai.risk_score)}/100</span>`
-      : '';
-    const entBadge = ai.shannon_entropy !== undefined
-      ? `<span class="badge warn">Entropy: ${escapeHtml(Number(ai.shannon_entropy).toFixed(2))}</span>`
-      : '';
-    const apiListHtml = (ai.detected_apis && ai.detected_apis.length)
-      ? `<div style="margin-top:4px;font-size:11.5px;color:#fca5a5;"><strong>API Berbahaya:</strong> ${ai.detected_apis.map(a => `<code>${escapeHtml(a)}</code>`).join(' ')}</div>`
-      : '';
-    const scriptHtml = (ai.extracted_script_preview || ai.deobfuscated_script)
-      ? `<div style="margin-top:6px;font-size:11.5px;background:#020617;border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:6px 8px;color:#fecaca;">
-           <div style="font-weight:700;color:#fca5a5;margin-bottom:2px;">Extracted &amp; Deobfuscated PDF Script</div>
-           ${ai.extracted_script_preview ? `<div><span style="color:#94a3b8;">Extracted:</span> <code>${escapeHtml(ai.extracted_script_preview)}</code></div>` : ''}
-           ${ai.deobfuscated_script ? `<div><span style="color:#86efac;">Deobfuscated:</span> <code style="color:#bbf7d0;">${escapeHtml(ai.deobfuscated_script)}</code></div>` : ''}
-         </div>`
-      : '';
-    const badgesBar = (riskBadge || entBadge)
-      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;">${riskBadge}${entBadge}</div>`
-      : '';
-    socCard.className = 'status-box bad-box';
-    socCard.innerHTML = `<div class="status-icon icon-bad">⚠</div><div style="min-width:0;flex:1;"><div class="status-title">Bahaya Terdeteksi! Dialihkan Senyap ke Ruang Plasebo (Sandbox)</div><div class="status-desc">${escapeHtml(reasons + vac)}</div>${badgesBar}${apiListHtml}${scriptHtml}</div>`;
   }
 
   if (!data._skipPlaceboSync) {
@@ -1138,8 +1110,6 @@ function renderSummaryCards(data) {
 }
 
 function renderResult(data) {
-  document.getElementById('senderOut').textContent = JSON.stringify(data.sender_view || data.attacker_view || data, null, 2);
-  document.getElementById('socOut').textContent = JSON.stringify(data.soc_view || data, null, 2);
   renderSummaryCards(data);
   renderMenuCdrBar(data.soc_view);
 }
@@ -1156,24 +1126,79 @@ function hashBadgeStyle(hexStr, isBroken) {
   return `background:hsla(${hue},75%,45%,0.22);color:hsl(${hue},85%,75%);border-color:hsla(${hue},75%,55%,0.55);`;
 }
 
+function renderChainVisualStrip(blocks, verification) {
+  const wrap = document.getElementById('chainVisualWrap');
+  if (!wrap) return;
+  if (!blocks || !blocks.length) {
+    wrap.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Belum ada rantai aktif. Klik <strong>1. Kirim Rantai Dokumen Bersih</strong> di atas untuk melihat 3 blok (Kodim 0606 → Korem 061 → PUSSIBERAD Pusat).</div>';
+    return;
+  }
+
+  const tamperedList = (verification && verification.tampered_blocks) || [];
+  const tamperedSet = new Set(tamperedList.map(tb => tb.block_index));
+  const recent3 = blocks.slice(0, 3).slice().reverse();
+
+  const htmlParts = [];
+  recent3.forEach((b, idx) => {
+    const isBroken = tamperedSet.has(b.block_index);
+    const prev8 = (b.prev_hash || '').slice(0, 8);
+    const block8 = (b.block_hash || '').slice(0, 8);
+    const unitLabel = b.source_unit || `Blok #${b.block_index}`;
+    htmlParts.push(`
+      <article class="chain-node ${isBroken ? 'tampered' : ''}">
+        <div class="chain-node-head">
+          <span>🔒 Blok #${escapeHtml(b.block_index)}</span>
+          <span class="badge ${isBroken ? 'bad' : 'ok'}">${isBroken ? 'RUSAK' : 'UTUH'}</span>
+        </div>
+        <div class="chain-node-unit">${escapeHtml(unitLabel)}</div>
+        <div class="chain-node-hash">Prev: ${escapeHtml(prev8)} → Hash: ${escapeHtml(block8)}</div>
+      </article>
+    `);
+
+    if (idx < recent3.length - 1) {
+      const nextB = recent3[idx + 1];
+      const arrowBroken = isBroken || tamperedSet.has(nextB.block_index);
+      htmlParts.push(
+        arrowBroken
+          ? `<div class="chain-arrow broken">🔓 RANTAI PUTUS: DATA DIUBAH</div>`
+          : `<div class="chain-arrow">🔒 Terhubung SHA-256 →</div>`
+      );
+    }
+  });
+
+  let explainHtml = '';
+  if (verification && !verification.valid && tamperedList.length) {
+    const tb = tamperedList[0];
+    explainHtml = `<div class="chain-tamper-explain"><strong>Penjelasan Singkat:</strong> Data pada <strong>Blok #${escapeHtml(tb.block_index)}</strong> telah diubah secara tidak sah di database sehingga sidik jari kriptografi SHA-256 tidak lagi cocok dengan rantai kunci blok sebelum maupun sesudahnya.</div>`;
+  }
+
+  wrap.innerHTML = `<div class="chain-visual-strip">${htmlParts.join('')}</div>${explainHtml}`;
+}
+
 async function refreshState() {
   const res = await fetch('/api/state');
   const st = await res.json();
+  latestLedgerBlocks = st.blocks || [];
   const tamperedSet = new Set();
   if (st.ledger_verification) {
     updateIntegrityBadge(st.ledger_verification);
     (st.ledger_verification.tampered_blocks || []).forEach(tb => tamperedSet.add(tb.block_index));
   }
+  renderChainVisualStrip(latestLedgerBlocks, st.ledger_verification);
 
   const timeline = document.getElementById('ledgerTimeline');
   timeline.innerHTML = st.blocks.length
     ? st.blocks.map(b => {
         const isTampered = tamperedSet.has(b.block_index);
         const isClean = (b.verdict || '').includes('CLEAN') && !isTampered;
+        const isSandboxDivert = (b.verdict || '').includes('AUTO-SANDBOX') || (b.verdict || '').includes('SANDBOX');
         const prev8 = (b.prev_hash || '').slice(0, 8);
         const block8 = (b.block_hash || '').slice(0, 8);
         const brokenBanner = isTampered
           ? `<div class="broken-banner">⛔ RANTAI TERPUTUS DI TITIK INI — DATA BLOK #${b.block_index} TELAH DIMODIFIKASI</div>`
+          : '';
+        const tab3Btn = isSandboxDivert
+          ? `<div><button type="button" class="btn btn-amber btn-sm" style="margin:8px 0 0 0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button></div>`
           : '';
         return `
         <div class="tl-item">
@@ -1193,6 +1218,7 @@ async function refreshState() {
               <span>→</span>
               <span class="hash-badge" style="${hashBadgeStyle(block8, isTampered)}">🔒 Kunci Blok Ini: ${block8}</span>
             </div>
+            ${tab3Btn}
             ${brokenBanner}
           </div>
         </div>`;
@@ -2633,8 +2659,6 @@ async function runImmunizeStep() {
       details: { reasons: sb.reasons || [] },
     },
   });
-  document.getElementById('senderOut').textContent = JSON.stringify({ status: '200 OK (PLASEBO)', file: sb.filename }, null, 2);
-  document.getElementById('socOut').textContent = JSON.stringify(data, null, 2);
   await refreshState();
 }
 
@@ -2787,10 +2811,8 @@ async function runSimulation() {
     }
 
     renderUnitsGrid(units);
-    // Sinkronkan Panel Pengirim (Plasebo) vs SOC, JSON logs, dan seluruh state Tab 2 & Tab 3
+    // Sinkronkan ringkasan Plasebo & seluruh state Tab 2 & Tab 3
     renderSummaryCards(data);
-    document.getElementById('senderOut').textContent = JSON.stringify(data.sender_view || att || data, null, 2);
-    document.getElementById('socOut').textContent = JSON.stringify(soc || data, null, 2);
     await refreshState();
   } catch (err) {
     redTerm.className = 'term-box term-red';
