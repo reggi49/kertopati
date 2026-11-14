@@ -1,6 +1,12 @@
 import hashlib
+import hmac
+import ipaddress
 import json
+import os
 import re
+import time
+import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from datetime import datetime, timezone
@@ -33,6 +39,75 @@ from app.xray_inspector import build_xray_report
 
 app = FastAPI(title="Kertopati — Zero-Trust Information Exchange Gateway")
 
+API_TOKEN = os.environ.get("KERTOPATI_API_TOKEN", "kertopati-soc-secret-2026")
+MAX_ACTIVE_INVESTIGATIONS = 10
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self' 'unsafe-inline' data: blob:; "
+        "object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    )
+    return response
+
+
+def _verify_admin_token(request: Request) -> bool:
+    token = request.headers.get("X-Kertopati-Token") or ""
+    if not token:
+        auth = request.headers.get("Authorization") or ""
+        if auth.lower().startswith("bearer "):
+            token = auth[7:].strip()
+    return bool(token) and hmac.compare_digest(token, API_TOKEN)
+
+
+class _WebhookNoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(
+            req.full_url, code, "Webhook redirects are disabled for SSRF protection", headers, fp
+        )
+
+
+def _is_ssrf_blocked_url(url: str) -> bool:
+    allowlist_raw = os.environ.get("KERTOPATI_WEBHOOK_ALLOWLIST", "")
+    allowlist = {u.strip() for u in allowlist_raw.split(",") if u.strip()}
+    if url in allowlist:
+        return False
+    try:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return True
+        host = (parsed.hostname or "").lower().strip()
+        if not host or host in (
+            "localhost",
+            "127.0.0.1",
+            "::1",
+            "0.0.0.0",
+            "169.254.169.254",
+            "metadata.google.internal",
+        ) or host.endswith((".local", ".internal", ".localhost")):
+            return True
+        try:
+            ip = ipaddress.ip_address(host)
+            if (
+                ip.is_loopback
+                or ip.is_private
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+                or ip.is_unspecified
+            ):
+                return True
+        except ValueError:
+            pass
+        return False
+    except Exception:
+        return True
+
 
 class SandboxReviewRequest(BaseModel):
     decision: str
@@ -43,7 +118,7 @@ class SimulateRequest(BaseModel):
     cve_id: str
     protection_mode: str = "WITH_KERTOPATI"
     attacker_ip: str = "185.220.101.47"
-    user_agent: str = "Mozilla/5.0 (RedTeam-Sim/2026)"
+    user_agent: str = "Mozilla/5.0 (HackerUploader/2026)"
 
 
 class SandboxExecRequest(BaseModel):
@@ -169,12 +244,15 @@ def _dispatch_webhook_alert(event_type: str, payload: dict) -> None:
     webhooks = _read_webhooks()
     events = _read_webhook_events()
     deliveries: List[dict] = []
+    opener = urllib.request.build_opener(_WebhookNoRedirectHandler)
     for wh in webhooks:
         if event_type not in (wh.get("events") or [event_type]):
             continue
         delivery_status = "QUEUED_AIRGAPPED"
         url = wh.get("url", "")
-        if url.startswith(("http://", "https://")) and "example.local" not in url:
+        if _is_ssrf_blocked_url(url):
+            delivery_status = "BLOCKED_SSRF_INTERNAL"
+        elif url.startswith(("http://", "https://")) and "example.local" not in url:
             try:
                 req = urllib.request.Request(
                     url,
@@ -182,7 +260,7 @@ def _dispatch_webhook_alert(event_type: str, payload: dict) -> None:
                     headers={"Content-Type": "application/json"},
                     method="POST",
                 )
-                with urllib.request.urlopen(req, timeout=1.0) as resp:
+                with opener.open(req, timeout=1.0) as resp:
                     delivery_status = f"DELIVERED ({resp.status})"
             except Exception:
                 delivery_status = "QUEUED_OFFLINE"
@@ -216,6 +294,11 @@ def _process_document(
             file_format=inspection.file_format,
             output_dir=SANITIZED_DIR,
         )
+        post_cdr_check = inspect_file_bytes(
+            cdr_result.sanitized_bytes,
+            cdr_result.sanitized_filename,
+            active_vaccine_patterns=active_vaccines,
+        )
         integrity_label = (
             "BSrE ByteRange Utuh"
             if inspection.file_format == "PDF"
@@ -245,6 +328,7 @@ def _process_document(
                     "sanitized_size_bytes": len(cdr_result.sanitized_bytes),
                     "page_count": cdr_result.page_count,
                     "removed_elements": cdr_result.removed_elements,
+                    "post_cdr_verified": post_cdr_check.verdict == "CLEAN",
                     "stripped_elements": (
                         ", ".join(cdr_result.removed_elements)
                         if cdr_result.removed_elements
@@ -321,6 +405,7 @@ async def dashboard(request: Request):
             "ledger_verification": ledger.verify_chain(),
             "agent_status": _read_agent_status(),
             "cve_catalog": CVE_CATALOG,
+            "api_token": API_TOKEN,
         },
     )
 
@@ -345,7 +430,12 @@ async def upload_pdf(
 
 
 @app.post("/api/demo/reset")
-async def reset_demo_data():
+async def reset_demo_data(request: Request):
+    if not _verify_admin_token(request):
+        return JSONResponse(
+            {"error": "Unauthorized: X-Kertopati-Token diperlukan untuk mereset data SOC."},
+            status_code=401,
+        )
     ledger.reset()
     sandbox_engine.reset()
     for fname in ("agent_status.json", "webhook_events.json"):
@@ -557,6 +647,24 @@ async def review_sandbox_event(sha256_prefix: str, payload: SandboxReviewRequest
                 status_code=400,
             )
 
+        # Post-CDR Re-scan Gate (tanpa memblokir vaksin sampel ini sendiri yang akan dinonaktifkan):
+        post_cdr_check = inspect_file_bytes(
+            cdr_res.sanitized_bytes,
+            cdr_res.sanitized_filename,
+            active_vaccine_patterns=[],
+        )
+        if post_cdr_check.verdict != "CLEAN":
+            san_file = SANITIZED_DIR / cdr_res.sanitized_filename
+            if san_file.exists():
+                san_file.unlink()
+            return JSONResponse(
+                {
+                    "error": "Post-CDR Gate menolak rilis: file hasil CDR masih memiliki struktur mencurigakan.",
+                    "reasons": post_cdr_check.reasons,
+                },
+                status_code=400,
+            )
+
         dl_url = f"/api/download/sanitized/{cdr_res.sanitized_filename}"
         note = payload.note or "Kelalaian pengguna: File disterilkan via CDR dan dirilis untuk diteruskan."
         updated = sandbox_engine.update_event_hitl(
@@ -633,6 +741,15 @@ async def import_vaccines(request: Request):
 _RANGE_INVESTIGATIONS: Dict[str, dict] = {}
 
 
+def _register_range_investigation(inv_id: str, inv: dict) -> None:
+    while len(_RANGE_INVESTIGATIONS) >= MAX_ACTIVE_INVESTIGATIONS:
+        oldest_key = next(iter(_RANGE_INVESTIGATIONS))
+        oldest_inv = _RANGE_INVESTIGATIONS.pop(oldest_key, None)
+        if oldest_inv and oldest_inv.get("sandbox_session_id"):
+            close_sandbox_session(oldest_inv["sandbox_session_id"])
+    _RANGE_INVESTIGATIONS[inv_id] = inv
+
+
 @app.post("/api/range/start")
 async def range_start_investigation(payload: SimulateRequest, request: Request):
     """Tahap 1: Mengirim & mengekstrak telemetri awal artifak serangan tanpa auto-selesai."""
@@ -648,7 +765,7 @@ async def range_start_investigation(payload: SimulateRequest, request: Request):
     inv_id = uuid.uuid4().hex[:10]
     sha256 = hashlib.sha256(raw_bytes).hexdigest()
     attacker_ip = payload.attacker_ip or (request.client.host if request.client else "185.220.101.47")
-    user_agent = payload.user_agent or request.headers.get("user-agent", "RedTeam-Sim/2026")
+    user_agent = payload.user_agent or request.headers.get("user-agent", "HackerUploader/2026")
     header_hex = " ".join(f"{b:02X}" for b in raw_bytes[:32])
     header_ascii = "".join(chr(b) if 32 <= b <= 126 else "." for b in raw_bytes[:32])
 
@@ -670,7 +787,7 @@ async def range_start_investigation(payload: SimulateRequest, request: Request):
         "inspection": None,
         "ai_result": None,
     }
-    _RANGE_INVESTIGATIONS[inv_id] = inv
+    _register_range_investigation(inv_id, inv)
 
     return JSONResponse(
         {
@@ -709,7 +826,7 @@ async def range_start_upload_investigation(
     if len(raw_bytes) > MAX_UPLOAD_SIZE_BYTES:
         return JSONResponse({"error": "Ukuran file melebihi batas maksimal 10 MB."}, status_code=413)
 
-    filename = Path(file.filename or "dokumen_uji.bin").name
+    filename = _sanitize_filename(file.filename or "dokumen_uji.bin")
     inv_id = uuid.uuid4().hex[:10]
     sha256 = hashlib.sha256(raw_bytes).hexdigest()
     attacker_ip = request.client.host if request.client else "185.220.101.47"
@@ -735,7 +852,7 @@ async def range_start_upload_investigation(
         "inspection": None,
         "ai_result": None,
     }
-    _RANGE_INVESTIGATIONS[inv_id] = inv
+    _register_range_investigation(inv_id, inv)
 
     return JSONResponse(
         {
@@ -800,11 +917,13 @@ async def range_step_audit(inv_id: str):
             }
         )
 
+    t0 = time.perf_counter()
     inspection = inspect_file_bytes(
         raw_bytes,
         filename,
         active_vaccine_patterns=sandbox_engine.get_enabled_vaccines(),
     )
+    inspect_elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
     inv["inspection"] = inspection
     inv["current_step"] = 2
 
@@ -817,7 +936,10 @@ async def range_step_audit(inv_id: str):
                 "verdict": inspection.verdict,
                 "file_format": inspection.file_format,
                 "magic_bytes_valid": inspection.magic_bytes_valid,
+                "total_size_bytes": len(raw_bytes),
+                "inspect_elapsed_ms": inspect_elapsed_ms,
                 "dangerous_tags_found": inspection.dangerous_tags_found,
+                "matched_vaccines": inspection.matched_vaccines,
                 "reasons": inspection.reasons,
                 "details": inspection.details,
                 "cdr_action": (
@@ -898,6 +1020,10 @@ async def range_sandbox_exec(inv_id: str, payload: SandboxExecRequest):
             "prompt_user": session.get("prompt_user", "nobody"),
             "mode": session.get("mode", "plasebo"),
             "docker_proof": session.get("docker_proof", {}),
+            "attacker_ip": inv.get("attacker_ip", "-"),
+            "user_agent": inv.get("user_agent", "-"),
+            "filename": inv.get("filename", "-"),
+            "sha256": inv.get("sha256", "-"),
         }
     )
 
@@ -958,7 +1084,7 @@ async def range_step_ai_analyze(inv_id: str):
     synthesis = analyze_threat_and_synthesize_vaccine(
         filename=filename,
         raw_bytes=raw_bytes,
-        source_unit=f"Simulasi RedTeam ({inv['cve_id']})",
+        source_unit=f"Hacker Uploader ({inv['cve_id']})",
         file_format=inspection.file_format,
         inspection_reasons=inspection.reasons,
         dangerous_tags=inspection.dangerous_tags_found,
@@ -990,6 +1116,12 @@ async def range_step_ai_analyze(inv_id: str):
                 "primary_ioc": synthesis["primary_ioc"],
                 "yara_rule": synthesis["yara_rule"],
                 "sigma_network_rule": ai.get("sigma_network_rule", ""),
+                "risk_score": ai.get("risk_score", 0),
+                "shannon_entropy": ai.get("shannon_entropy", 0.0),
+                "detected_apis": ai.get("detected_apis", []),
+                "extracted_script_preview": ai.get("extracted_script_preview", ""),
+                "deobfuscated_script": ai.get("deobfuscated_script", ""),
+                "obfuscation_layers": ai.get("obfuscation_layers", []),
             },
             "stage3_able_validation": {
                 "validation_status": ai.get("validation_status"),
@@ -1033,7 +1165,7 @@ async def range_step_immunize(inv_id: str):
     ledger_block = ledger.append_block(
         filename=filename,
         raw_bytes=raw_bytes,
-        source_unit=f"Simulasi RedTeam ({inv['cve_id']})",
+        source_unit=f"Hacker Uploader ({inv['cve_id']})",
         target_unit="Korem 061/Suryakencana -> PUSSIBERAD",
         bsre_status=f"DIVERTED ({inv['cve_id']})",
         verdict="DIVERTED TO AUTO-SANDBOX",
@@ -1042,7 +1174,7 @@ async def range_step_immunize(inv_id: str):
     sandbox_event = sandbox_engine.detonate_and_vaccinate(
         filename=filename,
         raw_bytes=raw_bytes,
-        source_unit=f"Simulasi RedTeam ({inv['cve_id']})",
+        source_unit=f"Hacker Uploader ({inv['cve_id']})",
         inspection_reasons=inspection.reasons,
         dangerous_tags=inspection.dangerous_tags_found,
         file_format=inspection.file_format,
@@ -1083,13 +1215,22 @@ async def range_step_immunize(inv_id: str):
         },
     )
 
-    # Verifikasi empiris nyata: kirim ulang byte yang sama melewati Policy Engine bervaksin
+    # Verifikasi empiris nyata: kirim ulang byte asli + varian termutasi (hash berbeda) melewati Policy Engine bervaksin
+    enabled_vacs = sandbox_engine.get_enabled_vaccines()
     retest = inspect_file_bytes(
         raw_bytes,
         filename,
-        active_vaccine_patterns=sandbox_engine.get_enabled_vaccines(),
+        active_vaccine_patterns=enabled_vacs,
     )
     matched_vaccines = retest.details.get("matched_vaccines", [])
+
+    variant_bytes = raw_bytes + b"\n% Polymorphic-Variant-Mutation-Korem061-2026\n"
+    variant_retest = inspect_file_bytes(
+        variant_bytes,
+        f"mutated_{filename}",
+        active_vaccine_patterns=enabled_vacs,
+    )
+    variant_matched = variant_retest.details.get("matched_vaccines", [])
     inv["current_step"] = 5
 
     return JSONResponse(
@@ -1106,6 +1247,9 @@ async def range_step_immunize(inv_id: str):
                 "retest_verdict": retest.verdict,
                 "blocked_by_vaccine": len(matched_vaccines) > 0,
                 "matched_vaccines": matched_vaccines,
+                "variant_sha256": hashlib.sha256(variant_bytes).hexdigest(),
+                "variant_retest_verdict": variant_retest.verdict,
+                "variant_blocked_by_vaccine": len(variant_matched) > 0,
                 "reasons": retest.reasons,
             },
         }
@@ -1121,7 +1265,7 @@ async def simulate_attack(payload: SimulateRequest, request: Request):
         return JSONResponse({"error": str(exc)}, status_code=400)
 
     attacker_ip = payload.attacker_ip or (request.client.host if request.client else "185.220.101.47")
-    user_agent = payload.user_agent or request.headers.get("user-agent", "RedTeam-Sim/2026")
+    user_agent = payload.user_agent or request.headers.get("user-agent", "HackerUploader/2026")
 
     if payload.protection_mode == "WITHOUT_KERTOPATI":
         return JSONResponse(
@@ -1147,7 +1291,7 @@ async def simulate_attack(payload: SimulateRequest, request: Request):
     processed = _process_document(
         raw_bytes=raw_bytes,
         filename=filename,
-        source_unit=f"Simulasi RedTeam ({payload.cve_id})",
+        source_unit=f"Hacker Uploader ({payload.cve_id})",
         target_unit="Korem 061/Suryakencana -> PUSSIBERAD",
     )
     payload_sha256 = hashlib.sha256(raw_bytes).hexdigest()

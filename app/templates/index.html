@@ -143,6 +143,203 @@
     .xray-clean { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.45); }
     .xray-evil, .xray-bad { background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.55); }
 
+    /* Floating Coachmark Tooltip & Visual Target Spotlight (Zero Layout Boxes) */
+    .guide-section { border:1.5px solid transparent; border-radius:10px; padding:8px; margin:-8px -8px 8px -8px; transition:border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+    .guide-section-col { border:1.5px solid transparent; border-radius:10px; padding:8px; transition:border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+    .guide-focus-block { border-color:rgba(251,191,36,.85) !important; background:rgba(251,191,36,.045) !important; box-shadow:0 0 0 1px rgba(251,191,36,.3), 0 0 20px rgba(251,191,36,.14) !important; }
+    .guide-focus-block.danger-focus { border-color:rgba(239,68,68,.85) !important; background:rgba(239,68,68,.06) !important; box-shadow:0 0 0 1px rgba(239,68,68,.35), 0 0 22px rgba(239,68,68,.18) !important; }
+    .guide-focus-block.ok-focus { border-color:rgba(16,185,129,.85) !important; background:rgba(16,185,129,.05) !important; box-shadow:0 0 0 1px rgba(16,185,129,.35), 0 0 20px rgba(16,185,129,.15) !important; }
+
+    @keyframes guidePulse {
+      0%, 100% { box-shadow:0 0 0 2px rgba(253,224,71,.75), 0 0 14px rgba(250,204,21,.45); }
+      50% { box-shadow:0 0 0 5px rgba(253,224,71,.28), 0 0 24px rgba(250,204,21,.75); }
+    }
+    .guide-next-btn { position:relative; outline:2px solid #fde047 !important; outline-offset:2px; animation:guidePulse 1.8s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .guide-next-btn { animation:none; }
+    }
+
+    /* Tethered Floating Coachmark Tooltip (White High-Contrast Bubble with Directional Caret) */
+    #coachTooltip {
+      position:fixed;
+      inset:auto;
+      margin:0;
+      padding:0;
+      border:none;
+      background:transparent;
+      overflow:visible;
+      width:min(315px, calc(100vw - 24px));
+      z-index:1001;
+      pointer-events:auto;
+    }
+    @supports (anchor-name: --my-anchor) {
+      [popover]#coachTooltip {
+        inset:auto;
+        margin:0;
+      }
+    }
+    #coachTooltip:not(:popover-open):not(.\:popover-open):not(.open) { display:none; }
+    #coachTooltip:is(:popover-open, .\:popover-open, .open) { display:block; }
+    .coach-bubble {
+      position:relative;
+      background:#ffffff;
+      color:#0f172a;
+      border-radius:12px;
+      padding:12px 14px 11px;
+      box-shadow:0 16px 38px rgba(2,6,23,.72), 0 0 0 1px rgba(251,191,36,.55);
+    }
+    .coach-bubble::before {
+      content:"";
+      position:absolute;
+      width:12px;
+      height:12px;
+      background:#ffffff;
+      transform:rotate(45deg);
+    }
+    #coachTooltip[data-side="left"] .coach-bubble::before {
+      left:-6px;
+      top:var(--arrow-y, 50%);
+      margin-top:-6px;
+      box-shadow:-1px 1px 0 rgba(251,191,36,.45);
+    }
+    #coachTooltip[data-side="right"] .coach-bubble::before {
+      right:-6px;
+      top:var(--arrow-y, 50%);
+      margin-top:-6px;
+      box-shadow:1px -1px 0 rgba(251,191,36,.45);
+    }
+    #coachTooltip[data-side="bottom"] .coach-bubble::before {
+      top:-6px;
+      left:var(--arrow-x, 28px);
+      margin-left:-6px;
+      box-shadow:-1px -1px 0 rgba(251,191,36,.45);
+    }
+    #coachTooltip[data-side="top"] .coach-bubble::before {
+      bottom:-6px;
+      left:var(--arrow-x, 28px);
+      margin-left:-6px;
+      box-shadow:1px 1px 0 rgba(251,191,36,.45);
+    }
+    .coach-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .coach-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:999px; font-size:10.5px; font-weight:800; letter-spacing:.35px; background:linear-gradient(135deg,#2563eb,#4f46e5); color:#ffffff; }
+    .coach-badge.danger { background:linear-gradient(135deg,#dc2626,#ea580c); }
+    .coach-badge.done { background:linear-gradient(135deg,#059669,#10b981); }
+    .coach-close { background:transparent; border:none; color:#64748b; font-size:15px; line-height:1; cursor:pointer; padding:2px 5px; border-radius:6px; font-weight:700; }
+    .coach-close:hover { background:#f1f5f9; color:#0f172a; }
+    .coach-title { margin:0 0 3px; font-size:13px; font-weight:800; color:#0f172a; }
+    .coach-desc { margin:0 0 9px; font-size:12px; color:#334155; line-height:1.42; }
+    .coach-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .coach-foot-actions { display:inline-flex; align-items:center; gap:6px; }
+    .coach-dots { display:inline-flex; align-items:center; gap:5px; }
+    .coach-dot { width:7px; height:7px; border-radius:50%; background:#cbd5e1; transition:all .2s ease; }
+    .coach-dot.done { background:#10b981; }
+    .coach-dot.active { width:16px; border-radius:999px; background:#2563eb; }
+    .coach-dot.danger { width:16px; border-radius:999px; background:#ef4444; }
+    .coach-next { background:linear-gradient(135deg,#2563eb,#4f46e5); color:#ffffff; border:none; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer; }
+    .coach-next:hover { filter:brightness(1.08); }
+    .coach-mute { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:3px 9px; font-size:11px; font-weight:700; cursor:pointer; }
+    .coach-mute:hover { background:#e2e8f0; color:#0f172a; }
+
+    /* Native <progress> Styling for Structural Document Scan */
+    .scan-progress-box { background:#060e1f; border:1px solid rgba(59,130,246,.45); border-radius:8px; padding:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .scan-progress-head { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; color:#93c5fd; font-weight:700; margin-bottom:8px; }
+    progress.audit-progress {
+      appearance:none;
+      border:0 solid;
+      overflow:clip;
+      width:100%;
+      height:10px;
+      --progress-bar-radius:999px;
+      border-radius:var(--progress-bar-radius);
+      background:#0f172a;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.45);
+      display:block;
+      margin-bottom:10px;
+    }
+    progress.audit-progress::-webkit-progress-bar { background:transparent; }
+    progress.audit-progress::-webkit-progress-value {
+      background:linear-gradient(90deg, #3b82f6, #10b981);
+      border-radius:var(--progress-bar-radius);
+      transition:inline-size 0.3s ease;
+    }
+    progress.audit-progress::-moz-progress-bar {
+      background:linear-gradient(90deg, #3b82f6, #10b981);
+      border-radius:var(--progress-bar-radius);
+      transition:inline-size 0.3s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      progress.audit-progress::-webkit-progress-value { transition:none; }
+      progress.audit-progress::-moz-progress-bar { transition:none; }
+    }
+    .scan-phase-log { font-size:11.5px; color:#cbd5e1; white-space:pre-wrap; line-height:1.55; }
+
+    /* Redesigned Laporan Plasebo & Kronologi Insiden + Native <dialog> */
+    .placebo-report-card { border-radius:10px; padding:14px; border:1px solid var(--border); background:#070f21; }
+    .placebo-report-card.ok-card { border-color:rgba(16,185,129,.48); background:linear-gradient(180deg, rgba(16,185,129,.09), rgba(7,15,33,.95)); }
+    .placebo-report-card.bad-card { border-color:rgba(239,68,68,.55); background:linear-gradient(180deg, rgba(239,68,68,.1), rgba(7,15,33,.95)); }
+    .placebo-report-card.warn-card { border-color:rgba(245,158,11,.5); background:linear-gradient(180deg, rgba(245,158,11,.08), rgba(7,15,33,.95)); }
+    .placebo-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+    .placebo-head-main { display:flex; align-items:flex-start; gap:10px; min-width:0; flex:1; }
+    .placebo-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .placebo-dual-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+    @media (max-width:760px) { .placebo-dual-grid { grid-template-columns:1fr; } }
+    .placebo-side-box { background:#030816; border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-size:12px; line-height:1.45; }
+    .placebo-side-box.sender { border-color:rgba(245,158,11,.4); }
+    .placebo-side-box.soc { border-color:rgba(16,185,129,.45); }
+    .placebo-side-box.vuln { border-color:rgba(239,68,68,.5); }
+    .placebo-side-label { font-size:10.5px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; margin-bottom:4px; }
+    .chrono-strip { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin-top:10px; }
+    @media (max-width:960px) { .chrono-strip { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+    .chrono-step-btn { text-align:left; width:100%; background:#040b1a; border:1px solid var(--border); border-radius:8px; padding:8px 9px; color:var(--text); cursor:pointer; font-family:inherit; transition:border-color .15s ease, transform .15s ease, background .15s ease; margin:0; }
+    .chrono-step-btn:hover { border-color:#60a5fa; background:#0b1730; transform:translateY(-1px); }
+    .chrono-step-btn.done { border-color:rgba(16,185,129,.45); }
+    .chrono-step-btn.danger { border-color:rgba(239,68,68,.6); background:rgba(239,68,68,.08); }
+    .chrono-step-num { font-size:10px; font-weight:800; color:#93c5fd; margin-bottom:2px; display:flex; justify-content:space-between; gap:4px; }
+    .chrono-step-btn.done .chrono-step-num { color:#6ee7b7; }
+    .chrono-step-btn.danger .chrono-step-num { color:#fca5a5; }
+    .chrono-step-title { font-size:11.5px; font-weight:700; color:#f8fafc; margin-bottom:2px; }
+    .chrono-step-sub { font-size:10.5px; color:#94a3b8; line-height:1.35; overflow-wrap:anywhere; }
+
+    /* Native Modal <dialog> for Full Chronology Report */
+    dialog.report-dialog {
+      margin:auto;
+      padding:0;
+      border:1px solid #334155;
+      border-radius:14px;
+      background:#0b1222;
+      color:#f8fafc;
+      width:min(960px, calc(100vw - 28px));
+      max-height:88vh;
+      box-shadow:0 24px 64px rgba(0,0,0,.78);
+    }
+    dialog.report-dialog[open] {
+      display:flex;
+      flex-direction:column;
+    }
+    dialog.report-dialog:modal {
+      overscroll-behavior:contain;
+    }
+    dialog.report-dialog::backdrop {
+      overflow:hidden;
+      overscroll-behavior:contain;
+      background:rgba(2,6,23,.82);
+      backdrop-filter:blur(3px);
+    }
+    .report-dlg-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 20px; border-bottom:1px solid var(--border); background:#0f172a; border-radius:14px 14px 0 0; }
+    .report-dlg-body { padding:18px 20px; overflow-y:auto; flex:1; overscroll-behavior:contain; }
+    .report-kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; margin-bottom:14px; }
+    @media (max-width:760px) { .report-kpi-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+    .report-kpi { background:#020617; border:1px solid var(--border); border-radius:8px; padding:9px 10px; }
+    .report-kpi-lbl { font-size:10.5px; color:var(--muted); margin-bottom:3px; }
+    .report-kpi-val { font-size:12.5px; font-weight:700; color:#e2e8f0; overflow-wrap:anywhere; }
+    .report-tl-card { background:#020617; border:1px solid var(--border); border-left:4px solid #3b82f6; border-radius:8px; padding:12px 14px; margin-bottom:12px; }
+    .report-tl-card.done { border-left-color:#10b981; }
+    .report-tl-card.danger { border-left-color:#ef4444; }
+    .report-tl-head { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+    .report-tl-title { font-size:13.5px; font-weight:800; color:#f8fafc; }
+    .report-tl-ts { font-size:11px; color:#94a3b8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .report-tl-detail { font-size:12px; color:#cbd5e1; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:#060d1c; border:1px solid #1e293b; border-radius:6px; padding:9px 10px; margin-top:6px; }
+
     @media (max-width: 900px) {
       .grid { grid-template-columns:1fr; }
       .stepper { flex-wrap:wrap; gap:10px; }
@@ -187,6 +384,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <span id="flowStatusBadge" class="badge warn">MENUNGGU DOKUMEN</span>
           <span id="simServerStatusBadge" class="badge warn">SIAP SIMULASI CVE</span>
+          <button id="btnToggleGuide" type="button" class="btn btn-amber btn-sm" style="margin:0;padding:3px 9px;font-size:11px;" onclick="toggleGuideMode()">💡 Tooltip: ON</button>
         </div>
       </h2>
 
@@ -197,7 +395,7 @@
         </div>
         <div id="step2" class="step-item">
           <div class="step-circle">2</div>
-          <div class="step-label">Audit Gateway</div>
+          <div class="step-label">Pindai Dokumen</div>
         </div>
         <div id="step3" class="step-item">
           <div class="step-circle">3</div>
@@ -221,37 +419,58 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px;">
-      <div class="cyber-controls">
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;color:var(--muted);font-weight:700;">1. Pilih Dokumen Uji (Preset CVE atau Unggah Sendiri)</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <select id="cveSelect">
-              <option value="CVE-2026-91814">CVE-2026-91814 — PDF Shadow Attack / ByteRange Bypass</option>
-              <option value="CVE-2026-6361">CVE-2026-6361 — PDFium RCE (/OpenAction + /JavaScript)</option>
-              <option value="CVE-2025-59802">CVE-2025-59802 — PDF OCG Hidden Content Spoofing</option>
-              <option value="JPEG-POLYGLOT">JPEG-POLYGLOT — Gambar + Trailing ZIP &amp; PowerShell -enc</option>
-              <option value="DOCX-MACRO">DOCX-MACRO — vbaProject.bin + External Template Rels</option>
-              <option value="CUSTOM-UPLOAD">Unggah Dokumen Sendiri (.pdf / .jpg / .docx)...</option>
-            </select>
-            <input id="rangeCustomFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" style="display:none;width:auto;max-width:250px;margin:0;padding:6px 8px;font-size:12px;" />
+    <!-- Floating Coachmark Tooltip (Popover Manual Non-Blocking dengan Panah Terarah) -->
+    <div id="coachTooltip" popover="manual" role="dialog" aria-labelledby="coachTitle" data-side="left">
+      <div class="coach-bubble">
+        <div class="coach-top">
+          <span id="coachBadge" class="coach-badge">LANGKAH 1/5</span>
+          <button id="btnCloseCoach" type="button" class="coach-close" aria-label="Tutup tooltip sementara" onclick="dismissCoachTooltipTemporarily()">×</button>
+        </div>
+        <h3 id="coachTitle" class="coach-title">Pilih Skenario &amp; Mulai Misi</h3>
+        <p id="coachDesc" class="coach-desc">Pilih CVE di blok tersorot atas, lalu klik tombol hijau ini.</p>
+        <div class="coach-foot">
+          <div id="coachDots" class="coach-dots" aria-hidden="true"></div>
+          <div class="coach-foot-actions">
+            <button id="btnMuteCoach" type="button" class="coach-mute" onclick="toggleGuideMode()">Nonaktifkan</button>
+            <button id="btnNextCoach" type="button" class="coach-next" style="display:none;" onclick="advancePrepCoach()">Lanjut →</button>
           </div>
         </div>
-        <div class="mode-switch">
-          <button id="btnModeWithout" type="button" class="mode-btn" onclick="setProtectionMode('WITHOUT_KERTOPATI')">Tanpa Kertopati (Server Rentan)</button>
-          <button id="btnModeWith" type="button" class="mode-btn active-prot" onclick="setProtectionMode('WITH_KERTOPATI')">Dengan Kertopati (Docker Plasebo + AI)</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div id="guideTargetControls" class="guide-section guide-focus-block">
+        <div class="cyber-controls" style="margin-bottom:0;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;color:var(--muted);font-weight:700;">Pilih Dokumen Uji (Preset CVE atau Unggah Sendiri)</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select id="cveSelect">
+                <option value="CVE-2026-91814">CVE-2026-91814 — PDF Shadow Attack / ByteRange Bypass</option>
+                <option value="CVE-2026-6361">CVE-2026-6361 — PDFium RCE (/OpenAction + /JavaScript)</option>
+                <option value="CVE-2025-59802">CVE-2025-59802 — PDF OCG Hidden Content Spoofing</option>
+                <option value="JPEG-POLYGLOT">JPEG-POLYGLOT — Gambar + Trailing ZIP &amp; PowerShell -enc</option>
+                <option value="DOCX-MACRO">DOCX-MACRO — vbaProject.bin + External Template Rels</option>
+                <option value="CUSTOM-UPLOAD">Unggah Dokumen Sendiri (.pdf / .jpg / .docx)...</option>
+              </select>
+              <input id="rangeCustomFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" style="display:none;width:auto;max-width:250px;margin:0;padding:6px 8px;font-size:12px;" />
+            </div>
+          </div>
+          <div id="modeSwitchBox" class="mode-switch">
+            <button id="btnModeWithout" type="button" class="mode-btn" onclick="setProtectionMode('WITHOUT_KERTOPATI')">Tanpa Kertopati (Server Rentan)</button>
+            <button id="btnModeWith" type="button" class="mode-btn active-prot" onclick="setProtectionMode('WITH_KERTOPATI')">Dengan Kertopati (Docker Plasebo + AI)</button>
+          </div>
         </div>
       </div>
       <div id="missionStepBar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:10px;background:#09101f;border:1px solid var(--border);border-radius:10px;">
-        <button id="btnStep1" type="button" class="btn btn-green" style="margin:0;" onclick="startInvestigation()">1. Kirim Dokumen &amp; Mulai Misi →</button>
-        <button id="btnStep2" type="button" class="btn btn-blue" style="margin:0;display:none;" onclick="handleStepButton(2)">2. Jalankan Audit Gateway →</button>
+        <button id="btnStep1" type="button" class="btn btn-green guide-next-btn" style="margin:0;" onclick="startInvestigation()">1. Kirim Dokumen &amp; Mulai Misi →</button>
+        <button id="btnStep2" type="button" class="btn btn-blue" style="margin:0;display:none;" onclick="handleStepButton(2)">2. Pindai Keamanan Dokumen →</button>
         <button id="btnStep3" type="button" class="btn btn-amber" style="margin:0;display:none;" onclick="handleStepButton(3)">3. Buka Terminal Docker →</button>
         <button id="btnStep4" type="button" class="btn btn-blue" style="margin:0;display:none;" onclick="handleStepButton(4)">4. Analisis AI Agent →</button>
         <button id="btnStep5" type="button" class="btn btn-green" style="margin:0;display:none;" onclick="handleStepButton(5)">5. Terbitkan Vaksin &amp; Kunci Ledger →</button>
       </div>
 
       <div class="grid" style="margin-bottom:14px;">
-        <div>
+        <div id="guideTargetAttacker" class="guide-section-col">
           <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Layar Penyerang — Web Linux Terminal (Docker Container Nyata):</div>
           <div id="terminalShellWrap" class="web-term-wrap" onclick="focusSandboxPrompt()">
             <div class="web-term-bar">
@@ -284,7 +503,7 @@
           </div>
           <div id="dockerProofBox" class="docker-proof-box"></div>
         </div>
-        <div>
+        <div id="guideTargetSoc" class="guide-section-col">
           <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Layar SOC Kertopati AI Agent (Telemetri Sandbox, YARA + Sigma &amp; Kekebalan):</div>
           <div id="blueTeamPanel" class="term-box term-blue">Menunggu telemetri pertahanan Blue Team &amp; Kertopati AI Agent...</div>
           <div id="sandboxMetaStrip" class="sandbox-meta" style="display:none;"></div>
@@ -297,13 +516,15 @@
         </div>
       </div>
 
-      <!-- Ringkasan Plasebo Sinkron -->
-      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Ringkasan Plasebo (Yang Dilihat Pengirim vs Keputusan Nyata SOC):</div>
-      <div id="placeboSummaryBox" class="status-box">
-        <div class="status-icon icon-muted">•</div>
-        <div>
-          <div class="status-title">Menunggu simulasi atau inspeksi</div>
-          <div class="status-desc">Ringkasan efek Plasebo &amp; status vaksinasi otomatis terisi di sini saat misi berjalan.</div>
+      <!-- Laporan Plasebo & Kronologi Insiden Lengkap -->
+      <div id="guideTargetPlacebo" class="guide-section" style="margin-bottom:0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Laporan Plasebo &amp; Kronologi Insiden Lengkap (Yang Dilihat Pengirim vs Keputusan Nyata SOC):</div>
+        <div id="placeboSummaryBox" class="status-box" style="margin-bottom:0;">
+          <div class="status-icon icon-muted">•</div>
+          <div>
+            <div class="status-title">Menunggu simulasi atau inspeksi</div>
+            <div class="status-desc">Ringkasan efek Plasebo, kronologi 5 tahap, &amp; laporan forensik siap-cetak otomatis terisi di sini saat misi berjalan.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -417,9 +638,9 @@
             </ul>
             {% if e.hitl_note %}<div style="font-size:12px;color:#cbd5e1;margin-top:4px;"><strong>Catatan SOC:</strong> {{ e.hitl_note }}</div>{% endif %}
             <div class="sandbox-actions">
-              <button class="btn btn-blue btn-sm" onclick="openXrayModal('{{ prefix }}')">Bedah X-Ray File</button>
-              <button class="btn btn-red btn-sm" onclick="reviewSandbox('{{ prefix }}', 'CONFIRMED_COMPROMISED')">Konfirmasi: Perangkat Terinfeksi</button>
-              <button class="btn btn-amber btn-sm" onclick="reviewSandbox('{{ prefix }}', 'HUMAN_ERROR_RELEASE_CDR')">Kelalaian User: Rilis Versi CDR</button>
+              <button class="btn btn-blue btn-sm" data-action="xray" data-prefix="{{ prefix }}">Bedah X-Ray File</button>
+              <button class="btn btn-red btn-sm" data-action="review" data-prefix="{{ prefix }}" data-decision="CONFIRMED_COMPROMISED">Konfirmasi: Perangkat Terinfeksi</button>
+              <button class="btn btn-amber btn-sm" data-action="review" data-prefix="{{ prefix }}" data-decision="HUMAN_ERROR_RELEASE_CDR">Kelalaian User: Rilis Versi CDR</button>
               {% if e.hitl_sanitized_download_url %}
               <a class="btn btn-green btn-sm" href="{{ e.hitl_sanitized_download_url }}" download>Unduh Versi CDR Steril</a>
               {% endif %}
@@ -449,9 +670,11 @@
                 <strong>{{ v.rule_name }}</strong>
                 <span class="badge {{ 'ok' if v.enabled|default(true) else 'bad' }}">{{ 'AKTIF' if v.enabled|default(true) else 'NONAKTIF' }}</span>
                 {% if ai.severity %}<span class="badge bad">{{ ai.severity }}</span>{% endif %}
+                {% if ai.risk_score is defined %}<span class="badge {{ 'bad' if ai.risk_score >= 70 else 'warn' }}">Risk Score: {{ ai.risk_score }}/100</span>{% endif %}
+                {% if ai.shannon_entropy is defined %}<span class="badge warn">Entropy: {{ "%.2f"|format(ai.shannon_entropy) }}</span>{% endif %}
                 {% if ai.validation_status %}<span class="badge ok">{{ ai.validation_status }}</span>{% endif %}
               </div>
-              <button class="btn btn-amber btn-sm" onclick="toggleVaccine('{{ v.rule_name }}')">{{ 'Nonaktifkan' if v.enabled|default(true) else 'Aktifkan' }}</button>
+              <button class="btn btn-amber btn-sm" data-action="toggle-vaccine" data-rule="{{ v.rule_name }}">{{ 'Nonaktifkan' if v.enabled|default(true) else 'Aktifkan' }}</button>
             </div>
             {% if ai.mitre_attack %}
             <div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -459,8 +682,21 @@
               {% if ai.analysis_mode %}<span class="badge" style="background:rgba(59,130,246,.16);color:#93c5fd;border:1px solid rgba(59,130,246,.4);">{{ ai.analysis_mode }}</span>{% endif %}
             </div>
             {% endif %}
+            {% if ai.detected_apis %}
+            <div style="font-size:12px;margin-bottom:6px;color:#fca5a5;">
+              <strong>API Berbahaya:</strong>
+              {% for api in ai.detected_apis %}<code style="margin-right:4px;">{{ api }}</code>{% endfor %}
+            </div>
+            {% endif %}
             {% if ai.commander_brief %}
             <div style="font-size:12.5px;color:#e2e8f0;margin-bottom:6px;"><strong>Ringkasan Taktik:</strong> {{ ai.commander_brief }}</div>
+            {% endif %}
+            {% if ai.extracted_script_preview or ai.deobfuscated_script %}
+            <div style="font-size:12px;background:#020617;border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:7px 9px;margin-bottom:6px;color:#fecaca;">
+              <div style="font-weight:700;color:#fca5a5;margin-bottom:4px;">Extracted &amp; Deobfuscated PDF Script</div>
+              {% if ai.extracted_script_preview %}<div style="margin-bottom:3px;"><span style="color:#94a3b8;">Extracted:</span> <code>{{ ai.extracted_script_preview }}</code></div>{% endif %}
+              {% if ai.deobfuscated_script %}<div><span style="color:#86efac;">Deobfuscated:</span> <code style="color:#bbf7d0;">{{ ai.deobfuscated_script }}</code></div>{% endif %}
+            </div>
             {% endif %}
             {% if ai.decoded_payload %}
             <div style="font-size:12px;background:#020617;border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:6px 8px;margin-bottom:6px;color:#fde68a;">
@@ -502,10 +738,49 @@
   </div>
 </div>
 
+<!-- Native Modal <dialog>: Laporan Kronologi Insiden & Efek Plasebo Lengkap -->
+<dialog id="chronologyDialog" class="report-dialog" closedby="any" aria-labelledby="chronologyDialogTitle">
+  <div class="report-dlg-head">
+    <div>
+      <h2 id="chronologyDialogTitle" style="margin:0;font-size:16px;">Laporan Kronologi Insiden &amp; Efek Plasebo Lengkap</h2>
+      <div id="chronologyDialogSubtitle" style="font-size:12px;color:var(--muted);margin-top:2px;">Memuat kronologi forensik...</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button type="button" id="btnCopyChronology" class="btn btn-blue btn-sm" style="margin:0;">Salin Laporan</button>
+      <button type="button" id="btnDownloadChronology" class="btn btn-amber btn-sm" style="margin:0;">Unduh .TXT</button>
+      <form method="dialog" style="margin:0;">
+        <button type="submit" value="close" class="btn btn-green btn-sm" style="margin:0;" autofocus>Tutup</button>
+      </form>
+    </div>
+  </div>
+  <div id="chronologyDialogBody" class="report-dlg-body"></div>
+</dialog>
+
 <script>
+const KERTOPATI_API_TOKEN = {{ (api_token or '') | tojson }};
+let lastMissionReport = null;
+
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.getAttribute('data-action');
+  if (action === 'xray') {
+    openXrayModal(btn.getAttribute('data-prefix') || '');
+  } else if (action === 'review') {
+    reviewSandbox(btn.getAttribute('data-prefix') || '', btn.getAttribute('data-decision') || '');
+  } else if (action === 'toggle-vaccine') {
+    toggleVaccineRule(btn.getAttribute('data-rule') || '');
+  } else if (action === 'sandbox-cmd') {
+    runSandboxCmd(btn.getAttribute('data-cmd') || '');
+  } else if (action === 'open-chronology') {
+    const st = btn.getAttribute('data-step');
+    openChronologyDialog(st ? Number(st) : null);
+  }
+});
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -571,19 +846,28 @@ async function runTamper() {
   });
 }
 
+let currentMainTab = 1;
 function switchMainTab(tabIdx) {
+  currentMainTab = tabIdx;
   [1, 2, 3].forEach(i => {
     const panel = document.getElementById(`tabPanel${i}`);
     const btn = document.getElementById(`tabBtn${i}`);
     if (panel) panel.classList.toggle('active', i === tabIdx);
     if (btn) btn.classList.toggle('active', i === tabIdx);
   });
+  if (typeof updateMissionGuide === 'function') {
+    updateMissionGuide(lastGuideStageKey);
+  }
 }
 
 async function resetDemoData() {
-  const res = await fetch('/api/demo/reset', { method: 'POST' });
+  const res = await fetch('/api/demo/reset', {
+    method: 'POST',
+    headers: { 'X-Kertopati-Token': KERTOPATI_API_TOKEN }
+  });
   const data = await res.json();
   activeInv = null;
+  lastMissionReport = null;
   document.getElementById('sandboxShellBar').style.display = 'none';
   document.getElementById('sandboxMetaStrip').style.display = 'none';
   resetTerminalChrome();
@@ -616,8 +900,11 @@ async function verifyLedgerNow() {
   await refreshState();
 }
 
-async function toggleVaccine(ruleName) {
-  await fetch(`/api/vaccines/${encodeURIComponent(ruleName)}/toggle`, { method: 'PATCH' });
+async function toggleVaccineRule(ruleName) {
+  await fetch(`/api/vaccines/${encodeURIComponent(ruleName)}/toggle`, {
+    method: 'PATCH',
+    headers: { 'X-Kertopati-Token': KERTOPATI_API_TOKEN }
+  });
   await refreshState();
 }
 
@@ -681,6 +968,92 @@ function renderMenuCdrBar(soc) {
   }
 }
 
+function isoNowLocal() {
+  return new Date().toISOString().replace('T', ' ').slice(0, 19) + 'Z';
+}
+
+function buildReportFromSummaryData(data) {
+  const sv = data.sender_view || data.attacker_view || {};
+  const soc = data.soc_view || {};
+  const tele = soc.forensic_telemetry || {};
+  const sbx = data.sandbox_execution || soc.sandbox_execution || {};
+  const sb = soc.sandbox_event || {};
+  const ai = sb.ai_analysis || {};
+  const cdr = soc.cdr || {};
+  const isVuln = data.protection_mode === 'WITHOUT_KERTOPATI';
+  const isClean = soc.verdict === 'CLEAN';
+  const isTampered = soc.verdict === 'TAMPERED';
+  const shaPrefix = sb.sha256_prefix || tele.sha256_prefix || '';
+  const reasonsList = (soc.details && soc.details.reasons) ? soc.details.reasons : (sb.reasons || soc.reasons || []);
+
+  if (isVuln) {
+    return {
+      statusKind: 'bad',
+      invId: data.inv_id || 'SIM-VULN',
+      cveId: data.cve_id || 'EXPLOIT',
+      filename: sb.filename || tele.filename || data.filename || 'dokumen_uji',
+      sha256: tele.payload_sha256 || '-',
+      shaPrefix,
+      attackerIp: tele.attacker_ip || '-',
+      userAgent: tele.user_agent || '-',
+      headline: 'Mode Tanpa Kertopati: Server Target Tertembus',
+      senderSummary: `${sv.status || '200 OK'} — ${sv.message || 'Penyerang mendapat shell root di target.'}`,
+      socSummary: soc.message || 'Tidak ada Auto-Sandbox, CDR, maupun AI Vaccine.',
+      riskScore: '-',
+      entropy: '-',
+      vaccineRule: 'TIDAK ADA',
+      ledgerInfo: 'TIDAK TERCATAT',
+      retestInfo: 'GAGAL (RENTAN)',
+      mitreAttack: [],
+      apis: [],
+      stages: [
+        { step: 1, label: 'Kirim Payload', status: 'done', ts: isoNowLocal(), summary: `Dokumen masuk dari ${tele.attacker_ip || '-'}`, detail: `CVE: ${data.cve_id || '-'}\nSHA-256: ${tele.payload_sha256 || '-'}` },
+        { step: 2, label: 'Cek Ekstensi & Kompromi', status: 'danger', ts: isoNowLocal(), summary: 'Lolos filter ekstensi; root shell aktif.', detail: (sv.terminal_logs || []).join('\n') || soc.message || 'Target kompromi.' }
+      ]
+    };
+  }
+
+  return {
+    statusKind: isTampered ? 'bad' : 'ok',
+    invId: data.inv_id || 'GATEWAY-TX',
+    cveId: data.cve_id || (isClean ? 'CLEAN-CDR' : (isTampered ? 'LEDGER-TAMPER' : 'DETEKSI-ANCAMAN')),
+    filename: sb.filename || tele.filename || cdr.filename || '-',
+    sha256: tele.payload_sha256 || '-',
+    shaPrefix,
+    attackerIp: tele.attacker_ip || '-',
+    userAgent: tele.user_agent || '-',
+    headline: isClean
+      ? 'Dokumen Lolos & Disterilkan CDR'
+      : (isTampered
+        ? `Tampering Ledger Terdeteksi (Blok #${soc.tampered_block_index ?? '-'})`
+        : 'Efek Plasebo Aktif — Pengirim Melihat 200 OK, SOC Mengamankan Ancaman'),
+    senderSummary: `${sv.status || '200 OK (PLASEBO)'} — ${sv.message || 'Dokumen diterima antrean tanpa kecurigaan.'}`,
+    socSummary: isClean
+      ? `CLEAN & CDR Steril (${cdr.original_size_bytes ?? '-'} B → ${cdr.sanitized_size_bytes ?? '-'} B)`
+      : (isTampered
+        ? `Rantai SHA-256 putus di Blok #${soc.tampered_block_index ?? '-'}`
+        : `${reasonsList.join('; ') || 'Ancaman dialihkan senyap ke Sandbox.'}${sb.generated_vaccine ? ' | Vaksin: ' + sb.generated_vaccine : ''}`),
+    riskScore: ai.risk_score !== undefined ? `${ai.risk_score}/100` : '-',
+    entropy: ai.shannon_entropy !== undefined ? Number(ai.shannon_entropy).toFixed(2) : '-',
+    vaccineRule: sb.generated_vaccine || soc.vaccine_rule_generated || '-',
+    ledgerInfo: sb.ledger_block_index ? `#${sb.ledger_block_index}` : 'Tercatat',
+    retestInfo: soc.verdict === 'CLEAN' ? 'BERSIH (CDR)' : 'TERBLOKIR VAKSIN',
+    mitreAttack: ai.mitre_attack || [],
+    apis: ai.detected_apis || [],
+    extractedScript: ai.extracted_script_preview || '',
+    deobfuscatedScript: ai.deobfuscated_script || '',
+    yaraRule: sb.yara_preview || ai.yara_rule || '',
+    sigmaRule: ai.sigma_network_rule || '',
+    stages: [
+      { step: 1, label: 'Kirim Dokumen', status: 'done', ts: isoNowLocal(), summary: `File ${sb.filename || tele.filename || cdr.filename || 'uji'} diterima gateway.`, detail: `Status ke Pengirim: ${sv.status || '200 OK'}\nPesan Pengirim: ${sv.message || '-'}` },
+      { step: 2, label: 'Pindai Struktur & CDR', status: isTampered ? 'danger' : 'done', ts: isoNowLocal(), summary: `Verdict: ${soc.verdict || '-'}`, detail: reasonsList.join('\n') || (isClean ? `CDR Size: ${cdr.original_size_bytes ?? '-'} -> ${cdr.sanitized_size_bytes ?? '-'}` : '-') },
+      { step: 3, label: 'Sandbox Terisolasi', status: isClean ? 'done' : 'done', ts: isoNowLocal(), summary: sbx.container_id ? `Container ${sbx.container_id}` : 'Isolasi gateway / decoy.', detail: sbx.stdout || tele.sandbox_stdout || 'Payload terisolasi dari host produksi.' },
+      { step: 4, label: 'AI Analyst & YARA', status: 'done', ts: isoNowLocal(), summary: ai.risk_score !== undefined ? `Risk ${ai.risk_score}/100 | Entropy ${Number(ai.shannon_entropy || 0).toFixed(2)}` : 'Analisis AI & IOC.', detail: `${ai.commander_brief || '-'}\nAPI: ${(ai.detected_apis || []).join(', ') || '-'}\nMITRE: ${(ai.mitre_attack || []).join(', ') || '-'}` },
+      { step: 5, label: 'Vaksin & Ledger SHA-256', status: isTampered ? 'danger' : 'done', ts: isoNowLocal(), summary: sb.generated_vaccine ? `Vaksin ${sb.generated_vaccine}` : 'Chain of Custody diperbarui.', detail: `Vaksin Aktif: ${sb.generated_vaccine || '-'}\nKeputusan Akhir: ${soc.verdict || '-'}` }
+    ]
+  };
+}
+
 function renderSummaryCards(data) {
   const senderCard = document.getElementById('senderSummaryCard');
   const socCard = document.getElementById('socSummaryCard');
@@ -706,9 +1079,8 @@ function renderSummaryCards(data) {
     senderCard.innerHTML = `<div class="status-icon icon-bad">☠</div><div><div class="status-title">Penyerang Mendapat Akses Shell (${escapeHtml(data.cve_id || 'EXPLOIT')})</div><div class="status-desc">${escapeHtml(sv.message || 'Server konvensional tidak memblokir payload.')}</div></div>`;
     socCard.className = 'status-box bad-box';
     socCard.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">SERVER KOMPROMI (TANPA KERTOPATI)</div><div class="status-desc">${escapeHtml(soc.message || 'Zero visibility: Tidak ada Auto-Sandbox, CDR, maupun AI Vaccine.')}</div></div>`;
-    if (placeboBox) {
-      placeboBox.className = 'status-box bad-box';
-      placeboBox.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">Mode Tanpa Kertopati: Server Tertembus</div><div class="status-desc">${escapeHtml(soc.message || 'Payload lolos audit ekstensi konvensional dan mengeksekusi perintah di server target.')}</div></div>`;
+    if (!data._skipPlaceboSync) {
+      renderPlaceboChronologyBox(buildReportFromSummaryData(data));
     }
     return;
   }
@@ -728,28 +1100,40 @@ function renderSummaryCards(data) {
       : 'Dokumen steril siap diteruskan ke Pusat.';
     socCard.className = 'status-box ok-box';
     socCard.innerHTML = `<div class="status-icon icon-ok">🛡</div><div><div class="status-title">Aman &amp; Disterilkan CDR</div><div class="status-desc">${escapeHtml(sizeTxt)}</div></div>`;
-    if (placeboBox) {
-      placeboBox.className = 'status-box ok-box';
-      placeboBox.innerHTML = `<div class="status-icon icon-ok">🛡</div><div><div class="status-title">Dokumen Lolos &amp; Disterilkan CDR</div><div class="status-desc">${escapeHtml(sizeTxt)}</div></div>`;
-    }
   } else if (soc.verdict === 'TAMPERED') {
     socCard.className = 'status-box bad-box';
     socCard.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">Peringatan: Rantai Ledger Dimodifikasi di Korem!</div><div class="status-desc">Integritas Blok #${escapeHtml(soc.tampered_block_index)} rusak karena isi data tidak lagi cocok dengan kunci SHA-256.</div></div>`;
-    if (placeboBox) {
-      placeboBox.className = 'status-box bad-box';
-      placeboBox.innerHTML = `<div class="status-icon icon-bad">⛔</div><div><div class="status-title">Tampering Ledger Terdeteksi!</div><div class="status-desc">Blok #${escapeHtml(soc.tampered_block_index)} tidak cocok dengan hash rantai SHA-256.</div></div>`;
-    }
   } else {
     const sb = soc.sandbox_event || {};
+    const ai = sb.ai_analysis || {};
     const reasonsList = (soc.details && soc.details.reasons) ? soc.details.reasons : (sb.reasons || []);
     const reasons = reasonsList.length ? reasonsList.slice(0, 2).join('; ') : 'Ancaman terdeteksi.';
     const vac = sb.generated_vaccine ? ` | Vaksin terbit: ${sb.generated_vaccine}` : '';
+    const riskBadge = ai.risk_score !== undefined
+      ? `<span class="badge ${ai.risk_score >= 70 ? 'bad' : 'warn'}">Risk Score: ${escapeHtml(ai.risk_score)}/100</span>`
+      : '';
+    const entBadge = ai.shannon_entropy !== undefined
+      ? `<span class="badge warn">Entropy: ${escapeHtml(Number(ai.shannon_entropy).toFixed(2))}</span>`
+      : '';
+    const apiListHtml = (ai.detected_apis && ai.detected_apis.length)
+      ? `<div style="margin-top:4px;font-size:11.5px;color:#fca5a5;"><strong>API Berbahaya:</strong> ${ai.detected_apis.map(a => `<code>${escapeHtml(a)}</code>`).join(' ')}</div>`
+      : '';
+    const scriptHtml = (ai.extracted_script_preview || ai.deobfuscated_script)
+      ? `<div style="margin-top:6px;font-size:11.5px;background:#020617;border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:6px 8px;color:#fecaca;">
+           <div style="font-weight:700;color:#fca5a5;margin-bottom:2px;">Extracted &amp; Deobfuscated PDF Script</div>
+           ${ai.extracted_script_preview ? `<div><span style="color:#94a3b8;">Extracted:</span> <code>${escapeHtml(ai.extracted_script_preview)}</code></div>` : ''}
+           ${ai.deobfuscated_script ? `<div><span style="color:#86efac;">Deobfuscated:</span> <code style="color:#bbf7d0;">${escapeHtml(ai.deobfuscated_script)}</code></div>` : ''}
+         </div>`
+      : '';
+    const badgesBar = (riskBadge || entBadge)
+      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;">${riskBadge}${entBadge}</div>`
+      : '';
     socCard.className = 'status-box bad-box';
-    socCard.innerHTML = `<div class="status-icon icon-bad">⚠</div><div><div class="status-title">Bahaya Terdeteksi! Dialihkan Senyap ke Ruang Plasebo (Sandbox)</div><div class="status-desc">${escapeHtml(reasons + vac)}</div></div>`;
-    if (placeboBox) {
-      placeboBox.className = 'status-box ok-box';
-      placeboBox.innerHTML = `<div class="status-icon icon-ok">🎭</div><div><div class="status-title">Efek Plasebo Aktif — Pengirim Melihat 200 OK, SOC Mengamankan Ancaman</div><div class="status-desc"><strong>Pengirim:</strong> ${escapeHtml(sv.message || '200 OK')} • <strong>SOC:</strong> ${escapeHtml(reasons + vac)} (Detail tersinkron di Tab 2 &amp; Tab 3)</div></div>`;
-    }
+    socCard.innerHTML = `<div class="status-icon icon-bad">⚠</div><div style="min-width:0;flex:1;"><div class="status-title">Bahaya Terdeteksi! Dialihkan Senyap ke Ruang Plasebo (Sandbox)</div><div class="status-desc">${escapeHtml(reasons + vac)}</div>${badgesBar}${apiListHtml}${scriptHtml}</div>`;
+  }
+
+  if (!data._skipPlaceboSync) {
+    renderPlaceboChronologyBox(buildReportFromSummaryData(data));
   }
 }
 
@@ -838,9 +1222,9 @@ async function refreshState() {
           <ul class="reason-list">${reasonsHtml}</ul>
           ${noteHtml}
           <div class="sandbox-actions">
-            <button class="btn btn-blue btn-sm" onclick="openXrayModal('${escapeHtml(prefix)}')">Bedah X-Ray File</button>
-            <button class="btn btn-red btn-sm" onclick="reviewSandbox('${escapeHtml(prefix)}', 'CONFIRMED_COMPROMISED')">Konfirmasi: Perangkat Terinfeksi</button>
-            <button class="btn btn-amber btn-sm" onclick="reviewSandbox('${escapeHtml(prefix)}', 'HUMAN_ERROR_RELEASE_CDR')">Kelalaian User: Rilis Versi CDR</button>
+            <button class="btn btn-blue btn-sm" data-action="xray" data-prefix="${escapeHtml(prefix)}">Bedah X-Ray File</button>
+            <button class="btn btn-red btn-sm" data-action="review" data-prefix="${escapeHtml(prefix)}" data-decision="CONFIRMED_COMPROMISED">Konfirmasi: Perangkat Terinfeksi</button>
+            <button class="btn btn-amber btn-sm" data-action="review" data-prefix="${escapeHtml(prefix)}" data-decision="HUMAN_ERROR_RELEASE_CDR">Kelalaian User: Rilis Versi CDR</button>
             ${dlBtn}
           </div>
         </div>`;
@@ -861,12 +1245,28 @@ async function refreshState() {
         const enabled = v.enabled !== false;
         const ai = v.ai_analysis || {};
         const sevBadge = ai.severity ? `<span class="badge bad">${escapeHtml(ai.severity)}</span>` : '';
+        const riskBadge = ai.risk_score !== undefined
+          ? `<span class="badge ${ai.risk_score >= 70 ? 'bad' : 'warn'}">Risk Score: ${escapeHtml(ai.risk_score)}/100</span>`
+          : '';
+        const entBadge = ai.shannon_entropy !== undefined
+          ? `<span class="badge warn">Entropy: ${escapeHtml(Number(ai.shannon_entropy).toFixed(2))}</span>`
+          : '';
         const valBadge = ai.validation_status ? `<span class="badge ok">${escapeHtml(ai.validation_status)}</span>` : '';
         const mitreHtml = (ai.mitre_attack && ai.mitre_attack.length)
           ? `<div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">${ai.mitre_attack.map(m => `<span class="badge warn">${escapeHtml(m)}</span>`).join('')}${ai.analysis_mode ? `<span class="badge" style="background:rgba(59,130,246,.16);color:#93c5fd;border:1px solid rgba(59,130,246,.4);">${escapeHtml(ai.analysis_mode)}</span>` : ''}</div>`
           : '';
+        const apiHtml = (ai.detected_apis && ai.detected_apis.length)
+          ? `<div style="font-size:12px;margin-bottom:6px;color:#fca5a5;"><strong>API Berbahaya:</strong> ${ai.detected_apis.map(a => `<code style="margin-right:4px;">${escapeHtml(a)}</code>`).join('')}</div>`
+          : '';
         const briefHtml = ai.commander_brief
           ? `<div style="font-size:12.5px;color:#e2e8f0;margin-bottom:6px;"><strong>Ringkasan Taktik:</strong> ${escapeHtml(ai.commander_brief)}</div>`
+          : '';
+        const pdfScriptHtml = (ai.extracted_script_preview || ai.deobfuscated_script)
+          ? `<div style="font-size:12px;background:#020617;border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:7px 9px;margin-bottom:6px;color:#fecaca;">
+               <div style="font-weight:700;color:#fca5a5;margin-bottom:4px;">Extracted &amp; Deobfuscated PDF Script</div>
+               ${ai.extracted_script_preview ? `<div style="margin-bottom:3px;"><span style="color:#94a3b8;">Extracted:</span> <code>${escapeHtml(ai.extracted_script_preview)}</code></div>` : ''}
+               ${ai.deobfuscated_script ? `<div><span style="color:#86efac;">Deobfuscated:</span> <code style="color:#bbf7d0;">${escapeHtml(ai.deobfuscated_script)}</code></div>` : ''}
+             </div>`
           : '';
         const decodedHtml = ai.decoded_payload
           ? `<div style="font-size:12px;background:#020617;border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:6px 8px;margin-bottom:6px;color:#fde68a;"><strong>Decoded Payload:</strong> <code>${escapeHtml(ai.decoded_payload)}</code></div>`
@@ -881,12 +1281,16 @@ async function refreshState() {
               <strong>${escapeHtml(v.rule_name)}</strong>
               <span class="badge ${enabled ? 'ok' : 'bad'}">${enabled ? 'AKTIF' : 'NONAKTIF'}</span>
               ${sevBadge}
+              ${riskBadge}
+              ${entBadge}
               ${valBadge}
             </div>
-            <button class="btn btn-amber btn-sm" onclick="toggleVaccine('${escapeHtml(v.rule_name)}')">${enabled ? 'Nonaktifkan' : 'Aktifkan'}</button>
+            <button class="btn btn-amber btn-sm" data-action="toggle-vaccine" data-rule="${escapeHtml(v.rule_name)}">${enabled ? 'Nonaktifkan' : 'Aktifkan'}</button>
           </div>
           ${mitreHtml}
+          ${apiHtml}
           ${briefHtml}
+          ${pdfScriptHtml}
           ${decodedHtml}
           <div style="font-size:12px;color:var(--muted);">Pola IOC: <code>${escapeHtml(v.pattern)}</code></div>
           <details class="tech-log">
@@ -901,6 +1305,339 @@ async function refreshState() {
 
 let currentProtectionMode = 'WITH_KERTOPATI';
 let activeInv = null; // { invId, step, sha256Prefix, cveId, mode, terminalActive, cmdHistory, cmdIdx }
+let guideEnabled = true;
+let guideDismissedForStage = false;
+let lastGuideStageKey = 'prep1';
+let coachRafPending = false;
+
+const GUIDE_STAGES = {
+  prep1: {
+    stepIdx: 1,
+    totalDots: 5,
+    badge: 'LANGKAH 1 — PILIH DOKUMEN',
+    badgeClass: '',
+    blocks: ['guideTargetControls'],
+    blockClass: '',
+    anchorId: 'cveSelect',
+    nextBtnId: '',
+    preferredSide: 'bottom',
+    hasNext: true,
+    title: 'Pilih Dokumen Uji',
+    desc: 'Pilih preset serangan CVE di dropdown ini (atau pilih "Unggah Dokumen Sendiri").'
+  },
+  prep2: {
+    stepIdx: 2,
+    totalDots: 5,
+    badge: 'LANGKAH 2 — PILIH MODE',
+    badgeClass: '',
+    blocks: ['guideTargetControls'],
+    blockClass: '',
+    anchorId: 'modeSwitchBox',
+    nextBtnId: '',
+    preferredSide: 'bottom',
+    hasNext: true,
+    title: 'Pilih Tanpa / Dengan Kertopati',
+    desc: 'Pilih "Tanpa Kertopati" untuk simulasi server rentan, atau "Dengan Kertopati" untuk proteksi Docker + AI.'
+  },
+  prep3: {
+    stepIdx: 3,
+    totalDots: 5,
+    badge: 'LANGKAH 3 — KIRIM',
+    badgeClass: '',
+    blocks: ['guideTargetControls'],
+    blockClass: '',
+    anchorId: 'btnStep1',
+    nextBtnId: 'btnStep1',
+    preferredSide: 'right',
+    hasNext: false,
+    title: 'Kirim Dokumen & Mulai Misi',
+    desc: 'Klik tombol hijau ini untuk mengirim dokumen uji ke sistem.'
+  },
+  step1: {
+    stepIdx: 4,
+    totalDots: 5,
+    badge: 'LANGKAH 4 — PINDAI FILE',
+    badgeClass: '',
+    blocks: ['guideTargetAttacker', 'guideTargetSoc'],
+    blockClass: '',
+    anchorId: 'btnStep2',
+    nextBtnId: 'btnStep2',
+    preferredSide: 'right',
+    hasNext: false,
+    title: 'Pindai Keamanan Dokumen',
+    desc: 'Lihat log Hacker Uploader (kiri) & SHA-256 (kanan), lalu klik tombol biru ini untuk memindai isi dokumen.'
+  },
+  step2: {
+    stepIdx: 4,
+    totalDots: 5,
+    badge: 'LANGKAH 5 — DOCKER SANDBOX',
+    badgeClass: '',
+    blocks: ['guideTargetSoc'],
+    blockClass: '',
+    anchorId: 'btnStep3',
+    nextBtnId: 'btnStep3',
+    preferredSide: 'right',
+    hasNext: false,
+    title: 'Ancaman Ditahan Senyap!',
+    desc: 'Perhatikan hasil pemindaian di Layar SOC (kanan). Klik tombol ini untuk membuka Terminal Docker Sandbox.'
+  },
+  compromised: {
+    stepIdx: 4,
+    totalDots: 5,
+    badge: 'SERVER KOMPROMI',
+    badgeClass: 'danger',
+    blocks: ['guideTargetAttacker', 'guideTargetPlacebo'],
+    blockClass: 'danger-focus',
+    anchorId: 'btnModeWith',
+    nextBtnId: 'btnModeWith',
+    preferredSide: 'bottom',
+    hasNext: false,
+    title: 'Target Tertembus Tanpa Kertopati!',
+    desc: 'Uji perintah terminal di kiri, lalu klik "Dengan Kertopati" di sini & ulangi misi untuk membandingkan.'
+  },
+  step3: {
+    stepIdx: 5,
+    totalDots: 5,
+    badge: 'LANGKAH 6 — AI AGENT',
+    badgeClass: '',
+    blocks: ['guideTargetAttacker'],
+    blockClass: '',
+    anchorId: 'btnStep4',
+    nextBtnId: 'btnStep4',
+    preferredSide: 'right',
+    hasNext: false,
+    title: 'Uji Terminal Docker, Lalu AI Agent',
+    desc: 'Coba ketik ls, cd, atau ps di Terminal Docker kiri. Jika sudah puas, klik tombol biru ini.'
+  },
+  step4: {
+    stepIdx: 5,
+    totalDots: 5,
+    badge: 'LANGKAH 7 — TERBITKAN VAKSIN',
+    badgeClass: '',
+    blocks: ['guideTargetSoc'],
+    blockClass: '',
+    anchorId: 'btnStep5',
+    nextBtnId: 'btnStep5',
+    preferredSide: 'right',
+    hasNext: false,
+    title: 'Tinjau Analisis AI & Vaksin YARA',
+    desc: 'Cek Risk Score, skrip terdekode & YARA di kanan. Klik tombol hijau ini agar seluruh satuan kebal.'
+  },
+  step5: {
+    stepIdx: 5,
+    totalDots: 5,
+    badge: 'MISI SELESAI ✓',
+    badgeClass: 'done',
+    blocks: ['guideTargetPlacebo'],
+    blockClass: 'ok-focus',
+    anchorId: 'btnOpenChronologyReport',
+    fallbackAnchorId: 'guideTargetPlacebo',
+    nextBtnId: 'btnOpenChronologyReport',
+    preferredSide: 'top',
+    hasNext: false,
+    title: 'Semua Satuan IMMUNIZED!',
+    desc: 'Lihat laporan Plasebo & kronologi lengkap di sini. Klik "Buka Laporan Kronologi Detail" untuk dialog siap lapor, atau klik "1. Kirim Dokumen (Ulangi Misi)" / "Reset Demo Data" lalu refresh browser untuk mengulang dari awal.'
+  }
+};
+
+function setCoachVisibility(visible) {
+  const tip = document.getElementById('coachTooltip');
+  if (!tip) return;
+  const hasPopover = Object.hasOwn(HTMLElement.prototype, 'popover') && typeof tip.showPopover === 'function';
+  if (visible) {
+    if (hasPopover) {
+      if (!tip.matches(':popover-open')) tip.showPopover();
+    } else {
+      tip.classList.add('open');
+    }
+  } else {
+    if (hasPopover) {
+      if (tip.matches(':popover-open')) tip.hidePopover();
+    } else {
+      tip.classList.remove('open');
+    }
+  }
+}
+
+function positionCoachTooltip() {
+  const tip = document.getElementById('coachTooltip');
+  if (!tip || !guideEnabled || guideDismissedForStage || currentMainTab !== 1) {
+    setCoachVisibility(false);
+    return;
+  }
+  const key = lastGuideStageKey === 'idle' ? 'prep1' : (lastGuideStageKey || 'prep1');
+  const cfg = GUIDE_STAGES[key] || GUIDE_STAGES.prep1;
+  let anchor = document.getElementById(cfg.anchorId);
+  if ((!anchor || anchor.offsetParent === null) && cfg.fallbackAnchorId) {
+    anchor = document.getElementById(cfg.fallbackAnchorId);
+  }
+  if (!anchor || anchor.offsetParent === null) {
+    setCoachVisibility(false);
+    return;
+  }
+
+  setCoachVisibility(true);
+  const aRect = anchor.getBoundingClientRect();
+  const tRect = tip.getBoundingClientRect();
+  const margin = 12;
+  const gap = 12;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  let side = 'left'; // 'left' means tooltip sits to the right of anchor, arrow on left edge
+  let left = aRect.right + gap;
+  let top = aRect.top - 4;
+
+  if (cfg.preferredSide === 'top') {
+    if (aRect.top - gap - tRect.height >= margin) {
+      side = 'top';
+      top = aRect.top - gap - tRect.height;
+      left = aRect.left + (aRect.width / 2) - (tRect.width / 2);
+    } else {
+      side = 'bottom';
+      top = aRect.bottom + gap;
+      left = aRect.left + (aRect.width / 2) - (tRect.width / 2);
+    }
+  } else if (cfg.preferredSide === 'bottom') {
+    if (aRect.bottom + gap + tRect.height <= vh - margin) {
+      side = 'bottom';
+      top = aRect.bottom + gap;
+      left = aRect.left;
+    } else {
+      side = 'top';
+      top = aRect.top - gap - tRect.height;
+      left = aRect.left;
+    }
+  } else if (left + tRect.width > vw - margin) {
+    if (aRect.bottom + gap + tRect.height <= vh - margin) {
+      side = 'bottom';
+      top = aRect.bottom + gap;
+      left = aRect.left + (aRect.width / 2) - (tRect.width / 2);
+    } else {
+      side = 'top';
+      top = aRect.top - gap - tRect.height;
+      left = aRect.left + (aRect.width / 2) - (tRect.width / 2);
+    }
+  }
+
+  left = Math.max(margin, Math.min(left, vw - tRect.width - margin));
+  top = Math.max(margin, Math.min(top, vh - tRect.height - margin));
+
+  tip.setAttribute('data-side', side);
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+
+  if (side === 'left' || side === 'right') {
+    const arrowY = Math.max(18, Math.min((aRect.top + aRect.height / 2) - top, tRect.height - 18));
+    tip.style.setProperty('--arrow-y', `${Math.round(arrowY)}px`);
+  } else {
+    const arrowX = Math.max(18, Math.min((aRect.left + aRect.width / 2) - left, tRect.width - 18));
+    tip.style.setProperty('--arrow-x', `${Math.round(arrowX)}px`);
+  }
+}
+
+function updateMissionGuide(stageKey) {
+  const normalized = stageKey === 'idle' ? 'prep1' : stageKey;
+  if (normalized && normalized !== lastGuideStageKey) {
+    guideDismissedForStage = false;
+  }
+  if (normalized) lastGuideStageKey = normalized;
+  const key = lastGuideStageKey || 'prep1';
+  const cfg = GUIDE_STAGES[key] || GUIDE_STAGES.prep1;
+
+  ['guideTargetControls', 'guideTargetAttacker', 'guideTargetSoc', 'guideTargetPlacebo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('guide-focus-block', 'danger-focus', 'ok-focus');
+  });
+  ['btnStep1', 'btnStep2', 'btnStep3', 'btnStep4', 'btnStep5', 'btnModeWith', 'cveSelect', 'modeSwitchBox', 'btnOpenChronologyReport'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.classList.remove('guide-next-btn');
+  });
+
+  const toggleBtn = document.getElementById('btnToggleGuide');
+  if (toggleBtn) toggleBtn.textContent = guideEnabled ? '💡 Tooltip: ON' : '💡 Tooltip: OFF';
+
+  if (!guideEnabled || currentMainTab !== 1) {
+    setCoachVisibility(false);
+    return;
+  }
+
+  cfg.blocks.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('guide-focus-block');
+    if (cfg.blockClass) el.classList.add(cfg.blockClass);
+  });
+
+  const highlightTargetId = cfg.nextBtnId || cfg.anchorId;
+  if (highlightTargetId) {
+    const nextEl = document.getElementById(highlightTargetId);
+    if (nextEl && nextEl.style.display !== 'none') {
+      nextEl.classList.add('guide-next-btn');
+    }
+  }
+
+  const badge = document.getElementById('coachBadge');
+  const title = document.getElementById('coachTitle');
+  const desc = document.getElementById('coachDesc');
+  const dots = document.getElementById('coachDots');
+  const nextBtn = document.getElementById('btnNextCoach');
+  if (badge) {
+    badge.className = `coach-badge ${cfg.badgeClass || ''}`.trim();
+    badge.textContent = cfg.badge;
+  }
+  if (title) title.textContent = cfg.title;
+  if (desc) desc.textContent = cfg.desc;
+  if (nextBtn) nextBtn.style.display = cfg.hasNext ? 'inline-block' : 'none';
+  if (dots) {
+    dots.innerHTML = [1, 2, 3, 4, 5].map(n => {
+      if (key === 'step5') return '<span class="coach-dot done"></span>';
+      if (key === 'compromised' && n === 4) return '<span class="coach-dot danger"></span>';
+      if (n < cfg.stepIdx) return '<span class="coach-dot done"></span>';
+      if (n === cfg.stepIdx) return '<span class="coach-dot active"></span>';
+      return '<span class="coach-dot"></span>';
+    }).join('');
+  }
+
+  if (key === 'step5' || key === 'compromised') {
+    const targetBox = document.getElementById('guideTargetPlacebo');
+    if (targetBox) {
+      targetBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => requestAnimationFrame(positionCoachTooltip), 380);
+    }
+  }
+  requestAnimationFrame(positionCoachTooltip);
+}
+
+function advancePrepCoach() {
+  if (lastGuideStageKey === 'prep1' || lastGuideStageKey === 'idle') {
+    updateMissionGuide('prep2');
+  } else if (lastGuideStageKey === 'prep2') {
+    updateMissionGuide('prep3');
+  }
+}
+
+function dismissCoachTooltipTemporarily() {
+  guideDismissedForStage = true;
+  setCoachVisibility(false);
+}
+
+function toggleGuideMode() {
+  guideEnabled = !guideEnabled;
+  guideDismissedForStage = false;
+  updateMissionGuide(lastGuideStageKey);
+}
+
+function scheduleCoachReposition() {
+  if (coachRafPending || !guideEnabled || guideDismissedForStage || currentMainTab !== 1) return;
+  coachRafPending = true;
+  requestAnimationFrame(() => {
+    coachRafPending = false;
+    positionCoachTooltip();
+  });
+}
+window.addEventListener('scroll', scheduleCoachReposition, { passive: true });
+window.addEventListener('resize', scheduleCoachReposition, { passive: true });
 
 function initRangeControls() {
   const sel = document.getElementById('cveSelect');
@@ -908,6 +1645,9 @@ function initRangeControls() {
   if (sel && fileIn) {
     sel.addEventListener('change', () => {
       fileIn.style.display = sel.value === 'CUSTOM-UPLOAD' ? 'inline-block' : 'none';
+      if (!activeInv && (lastGuideStageKey === 'prep1' || lastGuideStageKey === 'idle')) {
+        updateMissionGuide('prep2');
+      }
     });
   }
   const cmdInput = document.getElementById('sandboxCmdInput');
@@ -949,6 +1689,9 @@ function setProtectionMode(mode) {
     btnWithout.className = 'mode-btn' + (mode === 'WITHOUT_KERTOPATI' ? ' active-vuln' : '');
     btnWith.className = 'mode-btn' + (mode === 'WITH_KERTOPATI' ? ' active-prot' : '');
   }
+  if (!activeInv && (lastGuideStageKey === 'prep1' || lastGuideStageKey === 'prep2' || lastGuideStageKey === 'idle')) {
+    updateMissionGuide('prep3');
+  }
 }
 
 function resetStepButtons() {
@@ -958,7 +1701,7 @@ function resetStepButtons() {
     b1.textContent = '1. Kirim Dokumen & Mulai Misi →';
   }
   const defaults = {
-    2: ['btn btn-blue', '2. Jalankan Audit Gateway →'],
+    2: ['btn btn-blue', '2. Pindai Keamanan Dokumen →'],
     3: ['btn btn-amber', '3. Buka Terminal Docker →'],
     4: ['btn btn-blue', '4. Analisis AI Agent →'],
     5: ['btn btn-green', '5. Terbitkan Vaksin & Kunci Ledger →']
@@ -970,6 +1713,7 @@ function resetStepButtons() {
     b.className = defaults[i][0];
     b.textContent = defaults[i][1];
   }
+  updateMissionGuide('prep1');
 }
 
 function updateStepButtonsProgress(completedStep, opts = {}) {
@@ -980,13 +1724,13 @@ function updateStepButtonsProgress(completedStep, opts = {}) {
   }
 
   const doneLabels = {
-    2: '✓ 2. Audit Gateway (Lihat)',
+    2: '✓ 2. Pemindaian Dokumen (Lihat)',
     3: '✓ 3. Terminal Docker (Lihat)',
     4: '✓ 4. AI Agent (Lihat)',
     5: '✓ 5. Vaksin & Ledger Terkunci'
   };
   const nextLabels = {
-    2: ['btn btn-blue', '2. Jalankan Audit Gateway →'],
+    2: ['btn btn-blue', '2. Pindai Keamanan Dokumen →'],
     3: ['btn btn-amber', '3. Buka Terminal Docker →'],
     4: ['btn btn-blue', '4. Analisis AI Agent →'],
     5: ['btn btn-green', '5. Terbitkan Vaksin & Kunci Ledger →']
@@ -999,7 +1743,7 @@ function updateStepButtonsProgress(completedStep, opts = {}) {
       if (i === 2) {
         b.style.display = 'inline-block';
         b.className = 'btn btn-red';
-        b.textContent = '✕ 2. Audit Gagal (Server Kompromi)';
+        b.textContent = '✕ 2. Pemindaian Gagal (Server Kompromi)';
       } else {
         b.style.display = 'none';
       }
@@ -1019,6 +1763,14 @@ function updateStepButtonsProgress(completedStep, opts = {}) {
       b.style.display = 'none';
     }
   }
+
+  if (opts.compromisedAt2) {
+    updateMissionGuide('compromised');
+  } else if (completedStep >= 1 && completedStep <= 5) {
+    updateMissionGuide(`step${completedStep}`);
+  } else {
+    updateMissionGuide('idle');
+  }
 }
 
 function handleStepButton(stepNum) {
@@ -1030,7 +1782,7 @@ function handleStepButton(stepNum) {
       const bluePanel = document.getElementById('blueTeamPanel');
       bluePanel.textContent = cached;
       if (activeInv.sha256Prefix && stepNum >= 3) {
-        bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" onclick="openXrayModal('${escapeHtml(activeInv.sha256Prefix)}')">Bedah X-Ray File</button></div>`);
+        bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" data-action="xray" data-prefix="${escapeHtml(activeInv.sha256Prefix)}">Bedah X-Ray File</button></div>`);
       }
     }
     return;
@@ -1147,7 +1899,7 @@ function activateLiveTerminalUI(sbx, initHist) {
           ['Uji Network', 'ping -c 1 8.8.8.8']
         ];
     chips.innerHTML = shortcuts.map(([label, cmd]) =>
-      `<button type="button" class="btn ${mode === 'vulnerable' ? 'btn-red' : 'btn-amber'} btn-sm" onclick="runSandboxCmd('${cmd.replace(/'/g, "\\'")}')">${escapeHtml(label)}</button>`
+      `<button type="button" class="btn ${mode === 'vulnerable' ? 'btn-red' : 'btn-amber'} btn-sm" data-action="sandbox-cmd" data-cmd="${escapeHtml(cmd)}">${escapeHtml(label)}</button>`
     ).join('');
   }
   if (shellBar) shellBar.style.display = 'block';
@@ -1241,33 +1993,77 @@ async function startInvestigation() {
     activeInv = {
       invId: data.inv_id,
       step: 1,
+      sha256: art.sha256,
       sha256Prefix: art.sha256_prefix,
+      filename: art.filename,
+      attackerIp: art.attacker_ip,
+      userAgent: art.user_agent,
       cveId: data.cve_id || cveId,
       terminalActive: false,
       cmdHistory: [],
       cmdIdx: 0,
       completedSteps: { 1: true },
-      stepOutputs: {}
+      stepOutputs: {},
+      report: {
+        statusKind: 'warn',
+        invId: data.inv_id,
+        cveId: data.cve_id || cveId,
+        cveTitle: data.cve_title || cveId,
+        filename: art.filename || '-',
+        sizeBytes: art.size_bytes ?? '-',
+        sha256: art.sha256 || '-',
+        shaPrefix: art.sha256_prefix || '',
+        attackerIp: art.attacker_ip || '-',
+        userAgent: art.user_agent || '-',
+        protectionMode: currentProtectionMode,
+        headline: 'Misi Investigasi Dimulai — Dokumen Masuk Gateway',
+        senderSummary: `Paket ${art.filename} (${art.size_bytes} B) dikirim dari ${art.attacker_ip} (${currentProtectionMode}).`,
+        socSummary: 'Tahap 1 selesai: Telemetri file, SHA-256, dan header biner tercatat. Menunggu Pemindaian Struktural (Tahap 2).',
+        riskScore: '-',
+        entropy: '-',
+        vaccineRule: 'Menunggu Tahap 4/5',
+        ledgerInfo: 'Menunggu Tahap 5',
+        retestInfo: 'Menunggu Tahap 5',
+        mitreAttack: [],
+        apis: [],
+        stages: []
+      }
     };
+    upsertActiveChronologyStage({
+      step: 1,
+      label: 'Kirim Dokumen',
+      status: 'done',
+      ts: isoNowLocal(),
+      summary: `${art.filename} (${art.size_bytes} B) dari ${art.attacker_ip}`,
+      detail:
+        `Investigation ID : ${data.inv_id}\n` +
+        `Skenario / CVE   : ${data.cve_id} (${data.cve_description || '-'})\n` +
+        `Mode Proteksi    : ${currentProtectionMode}\n` +
+        `Pengirim         : ${art.attacker_ip} | UA: ${art.user_agent}\n` +
+        `SHA-256          : ${art.sha256}\n` +
+        `Header Hex (32B) : ${art.header_hex}\n` +
+        `Header ASCII     : ${art.header_ascii}`
+    });
+    renderPlaceboChronologyBox(activeInv.report);
 
     setStepperState(1, 'active');
     flowBadge.className = 'badge warn';
     flowBadge.textContent = 'TAHAP 1/5: DOKUMEN DIKIRIM';
     bar.style.width = '20%';
     pct.textContent = '20%';
-    ticker.textContent = `1/5 Kirim Dokumen selesai (${art.filename}, ${art.size_bytes} bytes). Lanjutkan ke Tahap 2 untuk audit gateway.`;
+    ticker.textContent = `1/5 Kirim Dokumen selesai (${art.filename}, ${art.size_bytes} bytes). Lanjutkan untuk memindai keamanan dokumen.`;
     if (simBadge) {
       simBadge.className = 'badge warn';
       simBadge.textContent = `TAHAP 1/5 (${data.inv_id})`;
     }
 
     redTerm.textContent =
-      `[RED TEAM UPLOADER — PENGIRIMAN DOKUMEN]\n` +
+      `[HACKER UPLOADER — PENGIRIMAN DOKUMEN]\n` +
       `Target Posture: ${currentProtectionMode}\n` +
       `Dokumen: ${art.filename} (${art.size_bytes} bytes)\n` +
       `Attacker IP: ${art.attacker_ip} | UA: ${art.user_agent}\n` +
       `Status: Paket biner terkirim ke antrean gateway.\n\n` +
-      `Klik "2. Jalankan Audit Gateway →" untuk melihat apakah payload terdeteksi atau lolos menuju server target!`;
+      `Klik "2. Pindai Keamanan Dokumen →" untuk melihat apakah payload terdeteksi atau lolos menuju server target!`;
 
     const s1Text =
       `[TAHAP 1 — INGESTION & MAGIC BYTES TELEMETRY]\n` +
@@ -1276,7 +2072,7 @@ async function startInvestigation() {
       `SHA-256: ${art.sha256}\n` +
       `Header Hex (32B): ${art.header_hex}\n` +
       `Header ASCII: ${art.header_ascii}\n\n` +
-      `[MENUNGGU ANALIS] Klik "2. Jalankan Audit Gateway →" untuk memeriksa struktur internal dokumen.`;
+      `[MENUNGGU ANALIS] Klik "2. Pindai Keamanan Dokumen →" untuk memeriksa struktur internal dokumen.`;
     activeInv.stepOutputs[1] = s1Text;
     bluePanel.textContent = s1Text;
 
@@ -1295,15 +2091,82 @@ async function runAuditStep() {
   const bar = document.getElementById('flowProgressBar');
   const ticker = document.getElementById('flowTickerText');
   const pct = document.getElementById('flowPctText');
+  const btnStep2 = document.getElementById('btnStep2');
 
-  bluePanel.textContent = `[*] Menjalankan parser Multi-Format, /ByteRange BSrE, OCG, & Vaksin YARA...`;
+  if (btnStep2) {
+    btnStep2.disabled = true;
+    btnStep2.style.opacity = '0.7';
+  }
 
-  const res = await fetch(`/api/range/${encodeURIComponent(activeInv.invId)}/step/audit`, { method: 'POST' });
-  const data = await res.json();
-  if (!res.ok) {
-    bluePanel.textContent = `[ERROR] ${data.error || res.status}`;
+  const isWithout = currentProtectionMode === 'WITHOUT_KERTOPATI';
+  // Durasi visual pindai acak < 5 detik (2.3 - 4.4 detik untuk Kertopati, ~1.1 detik untuk cek ekstensi konvensional)
+  const totalScanMs = isWithout ? 1150 : Math.floor(2300 + Math.random() * 2100);
+  const scanStartPerf = performance.now();
+
+  const phases = isWithout
+    ? [
+        [35, '[1/2] Server Konvensional: Mengecek ekstensi nama file (.pdf/.jpg/.docx)...'],
+        [85, '[2/2] Mengabaikan struktur internal biner & /ByteRange — meneruskan ke target...']
+      ]
+    : [
+        [24, `[1/4] Membaca header & memverifikasi Magic Bytes (${activeInv.filename || 'dokumen'})...`],
+        [52, '[2/4] Memindai /ByteRange BSrE, dekompresi stream FlateDecode & hex obfuscation...'],
+        [80, '[3/4] Mengecek pola aktif (/JS, macro, polyglot) & mencocokkan Vaksin YARA...'],
+        [97, '[4/4] Memfinalisasi verdict struktural & keputusan CDR...']
+      ];
+
+  bluePanel.className = 'term-box term-blue';
+  bluePanel.innerHTML =
+    `<div class="scan-progress-box">` +
+      `<div class="scan-progress-head">` +
+        `<span id="auditProgressLabel">[*] Sedang memindai isi dokumen secara struktural...</span>` +
+        `<span id="auditProgressPct">0%</span>` +
+      `</div>` +
+      `<progress id="auditProgressBar" class="audit-progress" max="100" value="0" aria-labelledby="auditProgressLabel"></progress>` +
+      `<div id="auditProgressStatus" class="scan-phase-log" role="status" aria-live="polite">Menginisialisasi scanner byte...</div>` +
+    `</div>`;
+
+  // Jalankan endpoint backend nyata paralel dengan progres bar visual
+  const fetchPromise = fetch(`/api/range/${encodeURIComponent(activeInv.invId)}/step/audit`, { method: 'POST' })
+    .then(async res => ({ ok: res.ok, status: res.status, data: await res.json() }));
+
+  const stepDelay = Math.floor(totalScanMs / phases.length);
+  const logLines = [];
+  for (const [val, label] of phases) {
+    logLines.push(label);
+    const pBar = document.getElementById('auditProgressBar');
+    const pPct = document.getElementById('auditProgressPct');
+    const pStat = document.getElementById('auditProgressStatus');
+    if (pBar) pBar.value = val;
+    if (pPct) pPct.textContent = `${val}%`;
+    if (pStat) pStat.textContent = logLines.join('\n');
+    bar.style.width = `${20 + Math.round(val * 0.18)}%`;
+    pct.textContent = `${20 + Math.round(val * 0.18)}%`;
+    ticker.textContent = label;
+    await sleep(stepDelay);
+  }
+
+  let respWrap;
+  try {
+    respWrap = await fetchPromise;
+  } finally {
+    if (btnStep2) {
+      btnStep2.disabled = false;
+      btnStep2.style.opacity = '1';
+    }
+  }
+
+  const pBarDone = document.getElementById('auditProgressBar');
+  const pPctDone = document.getElementById('auditProgressPct');
+  if (pBarDone) pBarDone.value = 100;
+  if (pPctDone) pPctDone.textContent = '100%';
+
+  if (!respWrap.ok) {
+    bluePanel.textContent = `[ERROR] ${respWrap.data.error || respWrap.status}`;
     return;
   }
+  const data = respWrap.data;
+  const totalUiSec = ((performance.now() - scanStartPerf) / 1000).toFixed(2);
 
   if (data.protection_mode === 'WITHOUT_KERTOPATI') {
     setStepperState(2, 'danger');
@@ -1327,18 +2190,39 @@ async function runAuditStep() {
     bluePanel.className = 'term-box term-red';
     const soc = data.soc_view || {};
     const tele = soc.forensic_telemetry || {};
+    const sbx = data.sandbox_session || {};
+    const proof = sbx.docker_proof || {};
     const vText =
-      `[INSIDEN KRITIS — TANPA KERTOPATI]\n` +
-      `${soc.message}\n` +
-      `Attacker IP: ${tele.attacker_ip || '-'}\n` +
-      `SHA-256: ${tele.payload_sha256 || '-'}\n` +
-      `Status: Penyerang mendapat akses root shell nyata di /srv/eoffice container target!\n` +
-      `Tidak ada Auto-Sandbox Plasebo, tidak ada CDR, dan tidak ada AI Threat Analyst.`;
+      `[INSIDEN KRITIS — TARGET RENTAN TERTEMBUS]\n` +
+      `Sumber Serangan  : ${tele.attacker_ip || activeInv.attackerIp || '-'} | UA: ${tele.user_agent || activeInv.userAgent || '-'}\n` +
+      `Artefak Pemicu   : ${activeInv.filename || '-'} (SHA-256: ${(tele.payload_sha256 || activeInv.sha256 || '-').slice(0, 16)}...)\n` +
+      `Container / PID  : ${sbx.container_id || '-'} (Host PID: ${proof.container_pid ?? '-'}) | Hak Akses: ${sbx.prompt_user || 'root'} (PENUH)\n` +
+      `Direktori Aktif  : ${sbx.cwd || '/srv/eoffice'}\n` +
+      `Status           : ${soc.message || 'Penyerang mendapat root shell di server target!'}\n` +
+      `Celah Keamanan   : Tidak ada Auto-Sandbox Plasebo, pemindaian struktur, maupun AI pembuat vaksin.`;
     activeInv.completedSteps[2] = true;
     activeInv.stepOutputs[2] = vText;
     bluePanel.textContent = vText;
     renderUnitsGrid(soc.immunized_units || {});
-    renderSummaryCards(data);
+    if (activeInv.report) {
+      activeInv.report.statusKind = 'bad';
+      activeInv.report.headline = 'Mode Tanpa Kertopati: Server Target Tertembus (Root Shell Aktif)';
+      activeInv.report.senderSummary = `200 OK (RENTAN) — Payload lolos pengecekan ekstensi dan membuka shell root di ${sbx.container_id || 'target'}.`;
+      activeInv.report.socSummary = soc.message || 'Zero visibility: tidak ada inspeksi biner, Auto-Sandbox Plasebo, CDR, maupun AI Vaccine.';
+      activeInv.report.vaccineRule = 'TIDAK ADA (Server Konvensional)';
+      activeInv.report.ledgerInfo = 'TIDAK TERCATAT';
+      activeInv.report.retestInfo = 'TERTEMBUS';
+      upsertActiveChronologyStage({
+        step: 2,
+        label: 'Kompromi Target Rentan',
+        status: 'danger',
+        ts: isoNowLocal(),
+        summary: `Root shell terbuka di container ${sbx.container_id || '-'} (${sbx.cwd || '/srv/eoffice'})`,
+        detail: vText
+      });
+      renderPlaceboChronologyBox(activeInv.report);
+    }
+    renderSummaryCards(Object.assign({ _skipPlaceboSync: true }, data));
     activeInv.step = 99;
     updateStepButtonsProgress(2, { compromisedAt2: true });
     return;
@@ -1359,17 +2243,34 @@ async function runAuditStep() {
 
   const reasons = (aud.reasons || []).map(r => ` - ${r}`).join('\n');
   const tags = (aud.dangerous_tags_found || []).join(', ') || '-';
+  const matchedVacs = (aud.matched_vaccines || []).join(', ') || '-';
+  const engineMs = aud.inspect_elapsed_ms !== undefined ? `${aud.inspect_elapsed_ms} ms` : '-';
+  const totalBytes = aud.total_size_bytes !== undefined ? `${aud.total_size_bytes} bytes` : '-';
   const s2Text =
-    `[TAHAP 2 — HASIL AUDIT STRUKTURAL NYATA]\n` +
-    `Format Magic Bytes: ${aud.file_format} (Valid: ${aud.magic_bytes_valid})\n` +
-    `Verdict Awal: ${aud.verdict}\n` +
-    `Keputusan CDR: ${aud.cdr_action}\n` +
-    `Tag/Pola Berbahaya: ${tags}\n` +
+    `[TAHAP 2 — HASIL PEMINDAIAN STRUKTURAL NYATA]\n` +
+    `Format Magic Bytes : ${aud.file_format} (Valid: ${aud.magic_bytes_valid}) | Ukuran: ${totalBytes}\n` +
+    `Durasi Pindai      : ${totalUiSec} dtk (Engine Byte-Parser: ${engineMs})\n` +
+    `Verdict Awal       : ${aud.verdict}\n` +
+    `Keputusan CDR      : ${aud.cdr_action}\n` +
+    `Tag/Pola Berbahaya : ${tags} | Vaksin Cocok: ${matchedVacs}\n` +
     `Temuan Detail:\n${reasons || ' - Tidak ada anomali struktur.'}\n\n` +
     `[MENUNGGU ANALIS] Klik "3. Buka Terminal Docker →" untuk menjalankan & menguji isolasi container nyata.`;
   activeInv.completedSteps[2] = true;
   activeInv.stepOutputs[2] = s2Text;
   bluePanel.textContent = s2Text;
+  if (activeInv.report) {
+    activeInv.report.socSummary = `Verdict ${aud.verdict} (${aud.file_format}, ${totalBytes}) dalam ${engineMs}; ${aud.cdr_action}`;
+    activeInv.report.scanStats = `${totalUiSec} dtk (Engine: ${engineMs})`;
+    upsertActiveChronologyStage({
+      step: 2,
+      label: 'Pemindaian Struktural',
+      status: 'done',
+      ts: isoNowLocal(),
+      summary: `${aud.verdict} | ${aud.file_format} (${engineMs}) | Tag: ${tags}`,
+      detail: s2Text
+    });
+    renderPlaceboChronologyBox(activeInv.report);
+  }
 
   updateStepButtonsProgress(2);
 }
@@ -1411,20 +2312,37 @@ async function runSandboxStep() {
 
   activateLiveTerminalUI(sbx, initHist);
 
+  const sbxProof = sbx.docker_proof || {};
   const s3Text =
     `[TAHAP 3 — LIVE DOCKER CONTAINER HONEYPOT TELEMETRY]\n` +
-    `Backend: ${sbx.execution_backend}\n` +
-    `Container ID: ${sbx.container_id} (Name: ${sbx.container_name || '-'})\n` +
-    `File Umpan Tersedia di /decoy_satuan: ${(sbx.decoy_files || []).join(', ')}\n` +
-    `Status Penyerang: ${(data.attacker_view || {}).message}\n` +
-    `Perintah Terekam: ${initHist.map(h => h.command).join(' | ')}\n\n` +
+    `Sumber Serangan  : ${activeInv.attackerIp || '-'} | UA: ${activeInv.userAgent || '-'}\n` +
+    `Artefak Pemicu   : ${activeInv.filename || '-'} (SHA-256: ${(activeInv.sha256 || '-').slice(0, 16)}...)\n` +
+    `Container / PID  : ${sbx.container_id} (Host PID: ${sbxProof.container_pid ?? '-'}) | Hak Akses: ${sbx.prompt_user || 'nobody'} (:ro, --network=none)\n` +
+    `Backend          : ${sbx.execution_backend}\n` +
+    `File Umpan (/decoy_satuan): ${(sbx.decoy_files || []).join(', ')}\n` +
+    `Perintah Awal    : ${initHist.map(h => h.command).join(' | ') || '-'}\n\n` +
     `Ketik perintah Linux (cd, ls, pwd, ps, cat, dll.) di Terminal Kiri atau klik "Cek Docker Inspect", lalu lanjut ke "4. Analisis AI Agent →".`;
   activeInv.completedSteps[3] = true;
   activeInv.stepOutputs[3] = s3Text;
   bluePanel.textContent = s3Text;
+  if (activeInv.report) {
+    activeInv.report.containerId = sbx.container_id || '-';
+    activeInv.report.isolationFlags = (sbx.isolation_flags || []).join(' ');
+    activeInv.report.senderSummary = `200 OK (PLASEBO) — Penyerang berinteraksi dengan /decoy_satuan di container ${sbx.container_id || '-'}.`;
+    activeInv.report.socSummary = `Container ${sbx.container_id} (${sbx.execution_backend}) aktif mengisolasi payload (--network=none, :ro).`;
+    upsertActiveChronologyStage({
+      step: 3,
+      label: 'Sandbox Docker Plasebo',
+      status: 'done',
+      ts: isoNowLocal(),
+      summary: `Container ${sbx.container_id} (PID ${sbxProof.container_pid ?? '-'}) | ${initHist.length} cmd awal`,
+      detail: s3Text
+    });
+    renderPlaceboChronologyBox(activeInv.report);
+  }
 
   if (activeInv.sha256Prefix) {
-    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" onclick="openXrayModal('${escapeHtml(activeInv.sha256Prefix)}')">Bedah X-Ray File</button></div>`);
+    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" data-action="xray" data-prefix="${escapeHtml(activeInv.sha256Prefix)}">Bedah X-Ray File</button></div>`);
   }
 
   updateStepButtonsProgress(3);
@@ -1440,6 +2358,21 @@ function renderSandboxTerminal(containerId, history, user = 'nobody', cwd = '/de
   });
   redTerm.textContent = lines.join('\n\n') || `${user}@${containerId}:${cwd}${symbol} (siap menerima perintah)`;
   redTerm.scrollTop = redTerm.scrollHeight;
+}
+
+function formatTelemetryCmdLine(c, fallbackCwd, isVuln) {
+  const ts = c.timestamp ? String(c.timestamp).slice(11, 19) + 'Z' : '--:--:--Z';
+  const cmdStr = String(c.command || '');
+  const low = cmdStr.toLowerCase();
+  let tag = '';
+  if (isVuln && /rahasia|\.env|kredensial|passwd|shadow|secret/.test(low)) {
+    tag = ' [ALERT: Akses file rahasia/kredensial]';
+  } else if (isVuln && /\b(id|whoami|uname)\b/.test(low)) {
+    tag = ' [RECON: Cek identitas & sistem]';
+  } else if (!isVuln && Number(c.exit_code) !== 0) {
+    tag = ' [TERBLOKIR: :ro / network=none]';
+  }
+  return ` - [${ts}] (rc=${c.exit_code}, ${c.duration_ms ?? 0}ms) [${c.cwd || fallbackCwd}] ${cmdStr}${tag}`;
 }
 
 async function runSandboxCmd(cmd) {
@@ -1485,20 +2418,42 @@ async function runSandboxCmd(cmd) {
   renderSandboxTerminal(data.container_id, data.command_history || [], user, cwd);
 
   const bluePanel = document.getElementById('blueTeamPanel');
-  const cmds = (data.command_history || []).map(c => ` - (${c.exit_code}) [${c.cwd || cwd}] ${c.command}`).join('\n');
   const isVuln = (data.mode || activeInv.mode) === 'vulnerable';
+  const cmds = (data.command_history || []).map(c => formatTelemetryCmdLine(c, cwd, isVuln)).join('\n');
+  const srcIp = data.attacker_ip || activeInv.attackerIp || '-';
+  const srcUa = data.user_agent || activeInv.userAgent || '-';
+  const srcFile = data.filename || activeInv.filename || '-';
+  const srcSha = (data.sha256 || activeInv.sha256 || '-').slice(0, 16);
+  const hostPid = (data.docker_proof || {}).container_pid ?? '-';
+  const privLabel = isVuln ? `${user} (UID 0 — AKSES PENUH)` : `${user} (:ro, --network=none)`;
+
   bluePanel.textContent =
     (isVuln
       ? `[INSIDEN AKTIF — PENYERANG MENJALANKAN PERINTAH DI TARGET RENTAN]\n`
       : `[TAHAP 3 — LIVE TELEMETRY PERINTAH PENYERANG DI DOCKER]\n`) +
-    `Container: ${data.container_id} (${data.execution_backend})\n` +
-    `Direktori Aktif (cwd): ${cwd}\n` +
-    `Riwayat Perintah Tertangkap Real-Time:\n${cmds}\n\n` +
+    `Sumber Serangan  : ${srcIp} | UA: ${srcUa}\n` +
+    `Artefak Pemicu   : ${srcFile} (SHA-256: ${srcSha}...)\n` +
+    `Container / PID  : ${data.container_id} (Host PID: ${hostPid}) | Hak Akses: ${privLabel}\n` +
+    `Direktori Aktif  : ${cwd}\n` +
+    `Riwayat Perintah & Audit Real-Time:\n${cmds}\n\n` +
     (isVuln
       ? `Tanpa Kertopati, server konvensional tidak memiliki isolasi atau pembuat vaksin otomatis.`
       : `Siap melanjutkan ke Tahap 4 untuk analisis AI & sintesis vaksin.`);
+  if (activeInv.report) {
+    const cmdCount = (data.command_history || []).length;
+    const stageNum = isVuln ? 2 : 3;
+    upsertActiveChronologyStage({
+      step: stageNum,
+      label: isVuln ? 'Kompromi Target Rentan' : 'Sandbox Docker Plasebo',
+      status: isVuln ? 'danger' : 'done',
+      ts: isoNowLocal(),
+      summary: `Container ${data.container_id} (${cmdCount} perintah terekam, cwd ${cwd})`,
+      detail: bluePanel.textContent
+    });
+    renderPlaceboChronologyBox(activeInv.report);
+  }
   if (activeInv.sha256Prefix && !isVuln) {
-    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" onclick="openXrayModal('${escapeHtml(activeInv.sha256Prefix)}')">Bedah X-Ray File</button></div>`);
+    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" data-action="xray" data-prefix="${escapeHtml(activeInv.sha256Prefix)}">Bedah X-Ray File</button></div>`);
   }
   focusSandboxPrompt();
 }
@@ -1540,7 +2495,12 @@ async function runAiAnalyzeStep() {
 
   const s4Text =
     `[TAHAP 4 — HASIL NYATA 3-TAHAP AI THREAT ANALYST]\n` +
-    `1) Pre-Triage Deobfuscation: ${dec}\n` +
+    `1) Pre-Triage & PDF Deobfuscation:\n` +
+    `   Risk Score: ${s2.risk_score ?? s1.risk_score ?? 0}/100 | Shannon Entropy: ${Number(s2.shannon_entropy ?? s1.shannon_entropy ?? 0).toFixed(2)}\n` +
+    `   API Berbahaya: ${(s2.detected_apis || s1.detected_apis || []).join(', ') || '-'}\n` +
+    `   Extracted Script: ${s2.extracted_script_preview || s1.extracted_script_preview || '-'}\n` +
+    `   Deobfuscated Script: ${s2.deobfuscated_script || s1.deobfuscated_script || '-'}\n` +
+    `   Base64 Decoded: ${dec}\n` +
     `   C2 URLs: ${(s1.urls || []).join(', ') || '-'}\n` +
     `2) AI Synthesis (${s2.analysis_mode}) | Severity: ${s2.severity}\n` +
     `   MITRE ATT&CK: ${(s2.mitre_attack || []).join(', ')}\n` +
@@ -1553,6 +2513,29 @@ async function runAiAnalyzeStep() {
   activeInv.completedSteps[4] = true;
   activeInv.stepOutputs[4] = s4Text;
   bluePanel.textContent = s4Text;
+  if (activeInv.report) {
+    const rScore = s2.risk_score ?? s1.risk_score;
+    const rEnt = s2.shannon_entropy ?? s1.shannon_entropy;
+    activeInv.report.riskScore = rScore !== undefined ? `${rScore}/100` : '-';
+    activeInv.report.entropy = rEnt !== undefined ? Number(rEnt).toFixed(2) : '-';
+    activeInv.report.apis = s2.detected_apis || s1.detected_apis || [];
+    activeInv.report.mitreAttack = s2.mitre_attack || [];
+    activeInv.report.extractedScript = s2.extracted_script_preview || s1.extracted_script_preview || '';
+    activeInv.report.deobfuscatedScript = s2.deobfuscated_script || s1.deobfuscated_script || '';
+    activeInv.report.yaraRule = s2.yara_rule || '';
+    activeInv.report.sigmaRule = s2.sigma_network_rule || '';
+    activeInv.report.vaccineRule = s2.rule_name || '-';
+    activeInv.report.socSummary = `AI (${s2.analysis_mode}) memvalidasi rule YARA ${s2.rule_name} (ABLE Gate: ${s3.validation_status}).`;
+    upsertActiveChronologyStage({
+      step: 4,
+      label: 'AI Agent, YARA & Sigma',
+      status: 'done',
+      ts: isoNowLocal(),
+      summary: `Risk ${activeInv.report.riskScore} | Entropy ${activeInv.report.entropy} | ${s2.rule_name}`,
+      detail: s4Text
+    });
+    renderPlaceboChronologyBox(activeInv.report);
+  }
 
   updateStepButtonsProgress(4);
 }
@@ -1609,14 +2592,36 @@ async function runImmunizeStep() {
   activeInv.completedSteps[5] = true;
   activeInv.stepOutputs[5] = s5Text;
   bluePanel.textContent = s5Text;
+
+  if (activeInv.report) {
+    activeInv.report.statusKind = 'ok';
+    activeInv.report.headline = 'Efek Plasebo Aktif — Pengirim Melihat 200 OK, SOC Mengamankan Ancaman & Seluruh Satuan Kebal';
+    activeInv.report.senderSummary = `200 OK (PLASEBO) — Dokumen ${sb.filename || activeInv.filename || 'simulasi'} diterima di antrean; penyerang tidak mengetahui payload dibelokkan ke sandbox.`;
+    activeInv.report.socSummary = `${(sb.reasons || []).slice(0, 2).join('; ') || 'Payload berhasil diisolasi'} | Vaksin aktif: ${sb.generated_vaccine || '-'} | Blok Ledger #${blk.block_index ?? '-'}`;
+    activeInv.report.vaccineRule = sb.generated_vaccine || activeInv.report.vaccineRule || '-';
+    activeInv.report.ledgerInfo = blk.block_index !== undefined ? `#${blk.block_index} (${(blk.block_hash || '').slice(0, 12)}...)` : 'Terkunci';
+    activeInv.report.retestInfo = ver.blocked_by_vaccine ? 'TERBLOKIR OTOMATIS (100%)' : 'TERVERIFIKASI';
+    activeInv.report.honeypotCommands = data.honeypot_commands_captured || [];
+    activeInv.report.immunizedUnits = data.immunized_units || {};
+    upsertActiveChronologyStage({
+      step: 5,
+      label: 'Vaksinasi, Ledger & Retest',
+      status: 'done',
+      ts: isoNowLocal(),
+      summary: `Ledger #${blk.block_index ?? '-'} | Vaksin ${sb.generated_vaccine || '-'} | Retest: ${ver.blocked_by_vaccine ? 'BLOKIR' : 'CEK'}`,
+      detail: s5Text
+    });
+    renderPlaceboChronologyBox(activeInv.report);
+  }
   updateStepButtonsProgress(5);
 
   if (activeInv.sha256Prefix) {
-    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" onclick="openXrayModal('${escapeHtml(activeInv.sha256Prefix)}')">Bedah X-Ray File</button></div>`);
+    bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" data-action="xray" data-prefix="${escapeHtml(activeInv.sha256Prefix)}">Bedah X-Ray File</button></div>`);
   }
 
   renderUnitsGrid(data.immunized_units || {});
   renderSummaryCards({
+    _skipPlaceboSync: true,
     protection_mode: 'WITH_KERTOPATI',
     sender_view: {
       status: '200 OK (PLASEBO)',
@@ -1777,7 +2782,7 @@ async function runSimulation() {
         `Real /decoy_satuan Output:\n${sbx.stdout || tele.sandbox_stdout || '-'}`;
 
       if (shaPrefix) {
-        bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" onclick="openXrayModal('${escapeHtml(shaPrefix)}')">Bedah X-Ray File Hasil Simulasi</button></div>`);
+        bluePanel.insertAdjacentHTML('beforeend', `\n<div style="margin-top:8px;"><button type="button" class="btn btn-amber btn-sm" data-action="xray" data-prefix="${escapeHtml(shaPrefix)}">Bedah X-Ray File Hasil Simulasi</button></div>`);
       }
     }
 
@@ -1861,8 +2866,266 @@ function closeXrayModal() {
   document.getElementById('xrayModal').classList.remove('open');
 }
 
+function upsertActiveChronologyStage(stageObj) {
+  if (!activeInv || !activeInv.report) return;
+  const list = activeInv.report.stages || [];
+  const idx = list.findIndex(s => Number(s.step) === Number(stageObj.step));
+  if (idx >= 0) list[idx] = stageObj;
+  else list.push(stageObj);
+  list.sort((a, b) => Number(a.step) - Number(b.step));
+  activeInv.report.stages = list;
+}
+
+function renderPlaceboChronologyBox(report) {
+  const box = document.getElementById('placeboSummaryBox');
+  if (!box || !report) return;
+  lastMissionReport = report;
+
+  const isBad = report.statusKind === 'bad';
+  const isOk = report.statusKind === 'ok';
+  const cardCls = isBad ? 'bad-card' : (isOk ? 'ok-card' : 'warn-card');
+  const iconCls = isBad ? 'icon-bad' : (isOk ? 'icon-ok' : 'icon-warn');
+  const iconTxt = isBad ? '⛔' : (isOk ? '🎭' : '⏳');
+  const xrayBtn = report.shaPrefix
+    ? `<button type="button" class="btn btn-amber btn-sm" style="margin:0;" data-action="xray" data-prefix="${escapeHtml(report.shaPrefix)}">Bedah X-Ray File</button>`
+    : '';
+
+  const badges = [];
+  if (report.cveId) badges.push(`<span class="badge warn">${escapeHtml(report.cveId)}</span>`);
+  if (report.riskScore && report.riskScore !== '-') badges.push(`<span class="badge ${parseInt(report.riskScore, 10) >= 70 ? 'bad' : 'warn'}">Risk Score: ${escapeHtml(report.riskScore)}</span>`);
+  if (report.entropy && report.entropy !== '-') badges.push(`<span class="badge warn">Entropy: ${escapeHtml(report.entropy)}</span>`);
+  if (report.vaccineRule && report.vaccineRule !== '-' && !report.vaccineRule.startsWith('Menunggu')) badges.push(`<span class="badge ${isBad ? 'bad' : 'ok'}">Vaksin: ${escapeHtml(report.vaccineRule)}</span>`);
+  if (report.ledgerInfo && report.ledgerInfo !== '-' && !report.ledgerInfo.startsWith('Menunggu')) badges.push(`<span class="badge ok">Ledger: ${escapeHtml(report.ledgerInfo)}</span>`);
+  if (report.retestInfo && !report.retestInfo.startsWith('Menunggu')) badges.push(`<span class="badge ${isBad ? 'bad' : 'ok'}">Retest: ${escapeHtml(report.retestInfo)}</span>`);
+
+  const stageNames = {
+    1: 'Kirim Dokumen',
+    2: isBad ? 'Cek Ekstensi / Kompromi' : 'Pemindaian Struktur',
+    3: 'Sandbox Docker',
+    4: 'AI + YARA/Sigma',
+    5: 'Vaksin & Ledger'
+  };
+  const stageMap = {};
+  (report.stages || []).forEach(s => { stageMap[Number(s.step)] = s; });
+  const totalCols = isBad ? 2 : 5;
+  const chronoHtml = Array.from({ length: totalCols }, (_, i) => i + 1).map(n => {
+    const st = stageMap[n];
+    const cls = st ? (st.status === 'danger' ? 'danger' : 'done') : '';
+    const statusPill = st ? (st.status === 'danger' ? '⚠ KOMPROMI' : '✓ SELESAI') : '⏳ MENUNGGU';
+    const subTxt = st ? st.summary : 'Belum dijalankan';
+    return `<button type="button" class="chrono-step-btn ${cls}" data-action="open-chronology" data-step="${n}" title="Klik untuk detail Tahap ${n}">
+      <div class="chrono-step-num"><span>TAHAP ${n}</span><span>${statusPill}</span></div>
+      <div class="chrono-step-title">${escapeHtml((st && st.label) || stageNames[n])}</div>
+      <div class="chrono-step-sub">${escapeHtml(subTxt)}</div>
+    </button>`;
+  }).join('');
+
+  box.className = `placebo-report-card ${cardCls}`;
+  box.innerHTML =
+    `<div class="placebo-head">
+      <div class="placebo-head-main">
+        <div class="status-icon ${iconCls}">${iconTxt}</div>
+        <div style="min-width:0;flex:1;">
+          <div class="status-title">${escapeHtml(report.headline)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Artefak: <code>${escapeHtml(report.filename || '-')}</code> | Pengirim IP: <code>${escapeHtml(report.attackerIp || '-')}</code> | ID: <code>${escapeHtml(report.invId || '-')}</code></div>
+          ${badges.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">${badges.join('')}</div>` : ''}
+        </div>
+      </div>
+      <div class="placebo-actions">
+        ${xrayBtn}
+        <button type="button" id="btnOpenChronologyReport" class="btn btn-green btn-sm" style="margin:0;" data-action="open-chronology">Buka Laporan Kronologi Detail</button>
+      </div>
+    </div>
+    <div class="placebo-dual-grid">
+      <div class="placebo-side-box sender">
+        <div class="placebo-side-label" style="color:#fcd34d;">Yang Dilihat Pengirim (Permukaan)</div>
+        <div style="color:#fef3c7;">${escapeHtml(report.senderSummary || '-')}</div>
+      </div>
+      <div class="placebo-side-box ${isBad ? 'vuln' : 'soc'}">
+        <div class="placebo-side-label" style="color:${isBad ? '#fca5a5' : '#6ee7b7'};">Keputusan &amp; Aksi Nyata SOC Kertopati</div>
+        <div style="color:${isBad ? '#fee2e2' : '#d1fae5'};">${escapeHtml(report.socSummary || '-')}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#93c5fd;font-weight:700;">Klik kartu tahap di bawah atau tombol di atas untuk membuka dialog laporan kronologi lengkap siap lapor:</div>
+    <div class="chrono-strip">${chronoHtml}</div>`;
+}
+
+function buildChronologyPlainText(report) {
+  if (!report) return 'Belum ada data kronologi investigasi.';
+  const lines = [
+    '====================================================================',
+    'LAPORAN KRONOLOGI INSIDEN & EFEK PLASEBO — KERTOPATI ZERO-TRUST GATEWAY',
+    '====================================================================',
+    `Waktu Cetak   : ${isoNowLocal()}`,
+    `Investigation : ${report.invId || '-'} | Skenario: ${report.cveId || '-'}`,
+    `Dokumen Uji   : ${report.filename || '-'} (${report.sizeBytes ?? '-'} bytes)`,
+    `SHA-256       : ${report.sha256 || '-'}`,
+    `Sumber Serang : ${report.attackerIp || '-'} | UA: ${report.userAgent || '-'}`,
+    `Status Akhir  : ${report.headline || '-'}`,
+    `Risk / Entropy: ${report.riskScore || '-'} / ${report.entropy || '-'}`,
+    `Vaksin YARA   : ${report.vaccineRule || '-'}`,
+    `Ledger Block  : ${report.ledgerInfo || '-'}`,
+    `Uji Retest    : ${report.retestInfo || '-'}`,
+    `MITRE ATT&CK  : ${(report.mitreAttack || []).join(', ') || '-'}`,
+    `API Berbahaya : ${(report.apis || []).join(', ') || '-'}`,
+    '',
+    '[RINGKASAN PLASEBO VS SOC]',
+    `- Yang Dilihat Pengirim : ${report.senderSummary || '-'}`,
+    `- Keputusan Nyata SOC   : ${report.socSummary || '-'}`,
+    '',
+    '[KRONOLOGI PER TAHAP]'
+  ];
+  (report.stages || []).forEach(s => {
+    lines.push(`\n--- TAHAP ${s.step}: ${s.label} (${s.ts || '-'}) [${String(s.status || '').toUpperCase()}] ---`);
+    lines.push(`Ringkasan: ${s.summary || '-'}`);
+    lines.push(s.detail || '-');
+  });
+  if (report.extractedScript || report.deobfuscatedScript) {
+    lines.push('\n[EKSTRAKSI & DEOBFUSCATION SKRIP]');
+    if (report.extractedScript) lines.push(`Extracted   : ${report.extractedScript}`);
+    if (report.deobfuscatedScript) lines.push(`Deobfuscated: ${report.deobfuscatedScript}`);
+  }
+  return lines.join('\n');
+}
+
+function openChronologyDialog(focusStep = null) {
+  const dlg = document.getElementById('chronologyDialog');
+  const subtitle = document.getElementById('chronologyDialogSubtitle');
+  const body = document.getElementById('chronologyDialogBody');
+  const report = lastMissionReport;
+  if (!dlg || !body) return;
+  if (!report) {
+    if (subtitle) subtitle.textContent = 'Belum ada sesi investigasi aktif';
+    body.innerHTML = '<div style="color:var(--muted);font-size:13px;">Jalankan misi terlebih dahulu untuk melihat laporan kronologi forensik lengkap.</div>';
+    dlg.showModal();
+    return;
+  }
+
+  if (subtitle) {
+    subtitle.textContent = `ID: ${report.invId || '-'} | Artefak: ${report.filename || '-'} | IP Pengirim: ${report.attackerIp || '-'} | Skenario: ${report.cveId || '-'}`;
+  }
+
+  const kpis = [
+    ['Status & Efek Plasebo', report.statusKind === 'bad' ? 'TARGET KOMPROMI' : (report.statusKind === 'ok' ? 'TERLINDUNGI & PLASEBO' : 'DALAM PROSES')],
+    ['Risk Score / Entropy', `${report.riskScore || '-'} / ${report.entropy || '-'}`],
+    ['Vaksin YARA Aktif', report.vaccineRule || '-'],
+    ['Blockchain Ledger', report.ledgerInfo || '-'],
+    ['Verifikasi Serangan Ulang', report.retestInfo || '-'],
+    ['Container Sandbox', report.containerId || '-'],
+    ['MITRE ATT&CK', (report.mitreAttack || []).join(', ') || '-'],
+    ['API Berbahaya', (report.apis || []).join(', ') || '-']
+  ];
+
+  const kpiHtml = `<div class="report-kpi-grid">${kpis.map(([k, v]) => `
+    <div class="report-kpi">
+      <div class="report-kpi-lbl">${escapeHtml(k)}</div>
+      <div class="report-kpi-val">${escapeHtml(v)}</div>
+    </div>`).join('')}</div>`;
+
+  const scriptBox = (report.extractedScript || report.deobfuscatedScript)
+    ? `<div class="xray-box xray-bad" style="margin-bottom:14px;">
+        <div style="font-weight:700;color:#fca5a5;margin-bottom:4px;">Bukti Skrip Terekstrak &amp; Hasil Deobfuscation Nyata</div>
+        ${report.extractedScript ? `<div style="font-size:12px;margin-bottom:4px;"><span style="color:#94a3b8;">Extracted:</span> <code>${escapeHtml(report.extractedScript)}</code></div>` : ''}
+        ${report.deobfuscatedScript ? `<div style="font-size:12px;"><span style="color:#86efac;">Deobfuscated:</span> <code style="color:#bbf7d0;">${escapeHtml(report.deobfuscatedScript)}</code></div>` : ''}
+      </div>`
+    : '';
+
+  const stagesHtml = (report.stages && report.stages.length)
+    ? report.stages.map(s => {
+        const cls = s.status === 'danger' ? 'danger' : 'done';
+        const isFocus = focusStep && Number(focusStep) === Number(s.step);
+        const focusStyle = isFocus ? 'box-shadow:0 0 0 2px #fde047;' : '';
+        return `<div id="chrono-detail-step-${s.step}" class="report-tl-card ${cls}" style="${focusStyle}">
+          <div class="report-tl-head">
+            <div class="report-tl-title">Tahap ${escapeHtml(s.step)} — ${escapeHtml(s.label)}</div>
+            <div class="report-tl-ts">${escapeHtml(s.ts || '-')}</div>
+          </div>
+          <div style="font-size:12.5px;color:#e2e8f0;margin-bottom:4px;"><strong>Ringkasan:</strong> ${escapeHtml(s.summary || '-')}</div>
+          <div class="report-tl-detail">${escapeHtml(s.detail || '-')}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--muted);">Belum ada catatan tahap yang terekam.</div>';
+
+  body.innerHTML =
+    `<div class="placebo-dual-grid" style="margin-bottom:14px;">
+      <div class="placebo-side-box sender">
+        <div class="placebo-side-label" style="color:#fcd34d;">Sisi Pengirim (Plasebo)</div>
+        <div style="color:#fef3c7;">${escapeHtml(report.senderSummary || '-')}</div>
+      </div>
+      <div class="placebo-side-box ${report.statusKind === 'bad' ? 'vuln' : 'soc'}">
+        <div class="placebo-side-label" style="color:${report.statusKind === 'bad' ? '#fca5a5' : '#6ee7b7'};">Keputusan &amp; Aksi Nyata SOC</div>
+        <div style="color:${report.statusKind === 'bad' ? '#fee2e2' : '#d1fae5'};">${escapeHtml(report.socSummary || '-')}</div>
+      </div>
+    </div>` +
+    kpiHtml +
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">SHA-256 Artefak: <code>${escapeHtml(report.sha256 || '-')}</code></div>` +
+    scriptBox +
+    `<h3 style="margin:0 0 10px 0;font-size:14px;color:#93c5fd;">Urutan Kronologi Forensik Lengkap</h3>` +
+    stagesHtml;
+
+  dlg.showModal();
+  if (focusStep) {
+    const el = document.getElementById(`chrono-detail-step-${focusStep}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function initChronologyDialog() {
+  const dlg = document.getElementById('chronologyDialog');
+  if (!dlg) return;
+
+  dlg.addEventListener('close', () => {
+    dlg.returnValue = '';
+  });
+
+  // Fallback untuk browser yang belum mendukung closedby="any" (mis. Safari)
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    const outside = (e, dialog) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    let pressedOutside = false;
+    dlg.addEventListener('pointerdown', (e) => { pressedOutside = outside(e, dlg); });
+    dlg.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e, dlg)) dlg.close(); });
+  }
+
+  const copyBtn = document.getElementById('btnCopyChronology');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const txt = buildChronologyPlainText(lastMissionReport);
+      try {
+        await navigator.clipboard.writeText(txt);
+        copyBtn.textContent = 'Tersalin ✓';
+        setTimeout(() => { copyBtn.textContent = 'Salin Laporan'; }, 1800);
+      } catch (_) {
+        copyBtn.textContent = 'Gagal Salin';
+        setTimeout(() => { copyBtn.textContent = 'Salin Laporan'; }, 1800);
+      }
+    });
+  }
+
+  const dlBtn = document.getElementById('btnDownloadChronology');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', () => {
+      const txt = buildChronologyPlainText(lastMissionReport);
+      const idPart = (lastMissionReport && lastMissionReport.invId) ? lastMissionReport.invId : 'laporan';
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kertopati-kronologi-${idPart}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initRangeControls();
+  initChronologyDialog();
+  updateMissionGuide('idle');
   refreshState();
 });
 </script>

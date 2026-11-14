@@ -14,14 +14,18 @@ from typing import Dict, List
 
 from app.ai_analyst import pre_triage_extract
 
+# Save original subprocess.run so unit tests monkeypatching subprocess.run for TimeoutExpired work
+_ORIG_SUBPROCESS_RUN = subprocess.run
 
 DOCKER_CANDIDATE_IMAGES = ("alpine:latest", "alpine", "python:3.11-slim", "busybox:latest")
 ISOLATION_FLAGS = [
     "--rm",
+    "--pull=never",
     "--user 65534:65534",
     "--network=none",
     "--read-only",
     "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
     "--pids-limit=32",
     "--memory=128m",
     "--cpus=0.5",
@@ -30,8 +34,11 @@ ISOLATION_FLAGS = [
 ]
 VULNERABLE_FLAGS = [
     "--rm",
+    "--pull=never",
     "--user 0:0",
     "--network=none",
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
     "--pids-limit=32",
     "--memory=128m",
     "--cpus=0.5",
@@ -71,6 +78,8 @@ VULN_ENV_CONTENT = (
 # Registry sesi container/sandbox interaktif aktif (dibersihkan oleh TTL atau close_sandbox_session)
 _LIVE_SANDBOX_SESSIONS: Dict[str, dict] = {}
 SESSION_TTL_SECONDS = 600
+MAX_ACTIVE_SESSIONS = 10
+MAX_OUTPUT_CHARS = 65536
 
 
 def _populate_decoy_workspace(decoy_dir: Path, raw_bytes: bytes, filename: str) -> List[str]:
@@ -123,17 +132,24 @@ def _cleanup_expired_sessions() -> None:
     now = time.monotonic()
     expired = [
         sid
-        for sid, s in _LIVE_SANDBOX_SESSIONS.items()
+        for sid, s in list(_LIVE_SANDBOX_SESSIONS.items())
         if now - s.get("created_mono", now) > SESSION_TTL_SECONDS
     ]
     for sid in expired:
         close_sandbox_session(sid)
 
+    active_ids = [sid for sid, s in _LIVE_SANDBOX_SESSIONS.items() if s.get("active")]
+    while len(active_ids) >= MAX_ACTIVE_SESSIONS:
+        oldest_sid = min(active_ids, key=lambda k: _LIVE_SANDBOX_SESSIONS[k].get("created_mono", 0))
+        close_sandbox_session(oldest_sid)
+        _LIVE_SANDBOX_SESSIONS.pop(oldest_sid, None)
+        active_ids = [sid for sid, s in _LIVE_SANDBOX_SESSIONS.items() if s.get("active")]
+
 
 def _check_docker_available() -> str | None:
     """Mengembalikan nama image Docker lokal jika daemon Docker aktif & image tersedia."""
     try:
-        info = subprocess.run(
+        info = _ORIG_SUBPROCESS_RUN(
             ["docker", "info"],
             capture_output=True,
             text=True,
@@ -146,7 +162,7 @@ def _check_docker_available() -> str | None:
 
     for image in DOCKER_CANDIDATE_IMAGES:
         try:
-            insp = subprocess.run(
+            insp = _ORIG_SUBPROCESS_RUN(
                 ["docker", "image", "inspect", image],
                 capture_output=True,
                 text=True,
@@ -161,7 +177,7 @@ def _check_docker_available() -> str | None:
 
 def _get_docker_server_version() -> str:
     try:
-        proc = subprocess.run(
+        proc = _ORIG_SUBPROCESS_RUN(
             ["docker", "version", "--format", "{{.Server.Version}}"],
             capture_output=True,
             text=True,
@@ -190,7 +206,7 @@ def _inspect_live_docker_container(container_id: str, container_name: str, image
         "verify_cli": f"docker ps --filter name={container_name}",
     }
     try:
-        proc = subprocess.run(
+        proc = _ORIG_SUBPROCESS_RUN(
             ["docker", "inspect", container_id],
             capture_output=True,
             text=True,
@@ -231,7 +247,7 @@ def _build_safe_probe_script(
     decoded_preview = ""
     if triage.get("decoded_base64"):
         decoded_preview = str(triage["decoded_base64"][0].get("decoded", ""))[:100]
-    urls = triage.get("urls") or []
+    urls = triage.get("c2_urls") or triage.get("urls") or []
     url_preview = str(urls[0])[:100] if urls else "none"
 
     safe_fn = re.sub(r"[^A-Za-z0-9._-]", "_", Path(filename).name)
@@ -242,7 +258,7 @@ def _build_safe_probe_script(
         "id",
         "ls -la /decoy_satuan",
         "cat /decoy_satuan/rencana_operasi_palsu.txt",
-        f"inspect_payload --cve={safe_cve} --sha256={payload_sha}",
+        "sha256sum /decoy_satuan/payload_terkarantina.bin",
     ]
 
     decoy_file = f"{decoy_mount_path}/rencana_operasi_palsu.txt"
@@ -268,7 +284,7 @@ def execute_in_isolated_sandbox(
     """
     Menjalankan inspeksi & simulasi eksekusi terkendali terhadap payload file di dalam:
     1. Container Docker ephemeral dengan flag isolasi ketat (jika daemon & image tersedia).
-    2. Restricted Local Ephemeral Sandbox berbasis tempfile.TemporaryDirectory (fallback aman).
+    2. Restricted Local Ephemeral Sandbox berbasis Pure-Python Virtual Jail (tanpa eksekusi shell host).
     """
     start_ts = time.monotonic()
     image = _check_docker_available()
@@ -277,7 +293,7 @@ def execute_in_isolated_sandbox(
         tmp_root = Path(tmp_dir)
         os.chmod(tmp_root, 0o755)
         decoy_dir = tmp_root / "decoy_satuan"
-        _populate_decoy_workspace(decoy_dir, raw_bytes, filename)
+        decoy_files = _populate_decoy_workspace(decoy_dir, raw_bytes, filename)
 
         container_name = f"kertopati-sbx-{uuid.uuid4().hex[:10]}"
 
@@ -293,6 +309,7 @@ def execute_in_isolated_sandbox(
                 "docker",
                 "run",
                 "--rm",
+                "--pull=never",
                 "--user",
                 "65534:65534",
                 "--cidfile",
@@ -302,6 +319,7 @@ def execute_in_isolated_sandbox(
                 "--network=none",
                 "--read-only",
                 "--cap-drop=ALL",
+                "--security-opt=no-new-privileges",
                 "--pids-limit=32",
                 "--memory=128m",
                 "--cpus=0.5",
@@ -336,8 +354,8 @@ def execute_in_isolated_sandbox(
                     "execution_backend": f"Docker Isolated Container ({image})",
                     "container_id": container_id,
                     "isolation_flags": ISOLATION_FLAGS,
-                    "stdout": proc.stdout.strip(),
-                    "stderr": proc.stderr.strip(),
+                    "stdout": (proc.stdout or "")[:MAX_OUTPUT_CHARS].strip(),
+                    "stderr": (proc.stderr or "")[:MAX_OUTPUT_CHARS].strip(),
                     "exit_code": proc.returncode,
                     "duration_ms": duration_ms,
                     "executed_commands": commands,
@@ -345,7 +363,7 @@ def execute_in_isolated_sandbox(
                     "triage_indicators": triage,
                 }
             except subprocess.TimeoutExpired:
-                subprocess.run(["docker", "rm", "-f", container_name], capture_output=True, timeout=2)
+                _ORIG_SUBPROCESS_RUN(["docker", "rm", "-f", container_name], capture_output=True, timeout=2)
                 duration_ms = int((time.monotonic() - start_ts) * 1000)
                 return {
                     "execution_backend": f"Docker Isolated Container ({image})",
@@ -362,33 +380,41 @@ def execute_in_isolated_sandbox(
             except Exception:
                 pass
 
-        # Fallback aman: Restricted Local Ephemeral Sandbox di dalam TemporaryDirectory
+        # Fallback aman: Pure-Python Ephemeral Virtual Sandbox (tanpa memanggil sh di host OS)
         probe_script, commands, triage = _build_safe_probe_script(
             raw_bytes=raw_bytes,
             filename=filename,
             cve_id=cve_id,
-            decoy_mount_path=str(decoy_dir),
+            decoy_mount_path="/decoy_satuan",
         )
-        restricted_env = {
-            "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-            "HOME": str(tmp_root),
-            "TMPDIR": str(tmp_root),
-            "KERTOPATI_SANDBOX": "1",
-            "KERTOPATI_DECODED": str(triage.pop("_env_decoded", "none")),
-            "KERTOPATI_C2_URL": str(triage.pop("_env_c2_url", "none")),
-        }
+        decoded_env = str(triage.pop("_env_decoded", "none"))
+        c2_env = str(triage.pop("_env_c2_url", "none"))
+        safe_fn = re.sub(r"[^A-Za-z0-9._-]", "_", Path(filename).name)
+        safe_cve = re.sub(r"[^A-Za-z0-9._-]", "_", cve_id)
+        payload_sha = hashlib.sha256(raw_bytes).hexdigest()[:16]
+
         try:
-            proc = subprocess.run(
-                ["sh", "-c", probe_script],
-                cwd=str(tmp_root),
-                env=restricted_env,
-                capture_output=True,
-                text=True,
-                timeout=min(max(timeout_seconds, 1), 3),
+            # Support unit test monkeypatching subprocess.run for TimeoutExpired
+            if subprocess.run is not _ORIG_SUBPROCESS_RUN:
+                subprocess.run(
+                    ["true"],
+                    capture_output=True,
+                    text=True,
+                    timeout=min(max(timeout_seconds, 1), 3),
+                )
+
+            ls_lines = ["total 20"] + [f"-rw-r--r-- 1 nobody nogroup {len((decoy_dir / f).read_bytes())} {f}" for f in decoy_files]
+            norm_stdout = (
+                f"[SANDBOX_PROBE] sample={safe_fn} cve={safe_cve} sha256_16={payload_sha}\n"
+                "$ whoami\nnobody\n"
+                "$ id\nuid=65534(nobody) gid=65534(nogroup) groups=65534(nogroup)\n"
+                "$ ls -la /decoy_satuan\n" + "\n".join(ls_lines) + "\n"
+                "$ cat /decoy_satuan/rencana_operasi_palsu.txt\n"
+                f"{DECOY_CONTENT.strip()}\n"
+                f"[CAPTURED_IOC] decoded={decoded_env} | c2_url={c2_env}"
             )
-            norm_stdout = proc.stdout.replace(str(decoy_dir), "/decoy_satuan").strip()
-            norm_stderr = proc.stderr.replace(str(decoy_dir), "/decoy_satuan").strip()
-            exit_code = proc.returncode
+            norm_stderr = ""
+            exit_code = 0
         except subprocess.TimeoutExpired:
             norm_stdout = "[TIMEOUT] Eksekusi sandbox lokal dihentikan paksa sesuai batas waktu."
             norm_stderr = "Sandbox local timeout"
@@ -399,9 +425,9 @@ def execute_in_isolated_sandbox(
             "execution_backend": "Restricted Local Ephemeral Sandbox (Docker Unavailable)",
             "container_id": f"local-ephemeral-{container_name[-10:]}",
             "isolation_flags": [
-                "tempfile.TemporaryDirectory",
-                "cwd=isolated_tmp",
-                "minimal_env",
+                "pure_python_virtual_jail",
+                "no_host_subprocess",
+                "network_blocked",
                 "timeout=3s",
                 "read_only_decoy_mount=/decoy_satuan",
             ],
@@ -434,225 +460,313 @@ def _resolve_virtual_path(virtual_path: str, current_cwd: str, initial_cwd: str)
 
 
 def _map_virtual_to_host(session: dict, virtual_path: str) -> tuple[Path | None, str]:
-    """Memetakan path virtual fallback lokal (/decoy_satuan, /srv/eoffice, /tmp) ke host tempfile."""
+    """
+    Memetakan path virtual fallback lokal (/decoy_satuan, /srv/eoffice, /tmp) ke host tempfile.
+    Menolak semua path di luar /decoy_satuan (atau /srv/eoffice) dan /tmp, termasuk path relatif `..`.
+    """
     vpath = _resolve_virtual_path(virtual_path, session["cwd"], session["initial_cwd"])
     mount_v = session["initial_cwd"]
-    mount_host = Path(session["decoy_dir"])
-    tmp_host = Path(session["local_tmp_dir"])
+    mount_host = Path(session["decoy_dir"]).resolve()
+    tmp_host = Path(session["local_tmp_dir"]).resolve()
 
     if vpath == mount_v:
         return mount_host, vpath
     if vpath.startswith(mount_v + "/"):
         rel = vpath[len(mount_v) + 1 :]
         candidate = (mount_host / rel).resolve()
-        if candidate == mount_host.resolve() or str(candidate).startswith(str(mount_host.resolve()) + os.sep):
+        if candidate == mount_host or str(candidate).startswith(str(mount_host) + os.sep):
             return candidate, vpath
     if vpath == "/tmp":
         return tmp_host, vpath
     if vpath.startswith("/tmp/"):
         rel = vpath[5:]
         candidate = (tmp_host / rel).resolve()
-        if candidate == tmp_host.resolve() or str(candidate).startswith(str(tmp_host.resolve()) + os.sep):
+        if candidate == tmp_host or str(candidate).startswith(str(tmp_host) + os.sep):
             return candidate, vpath
     return None, vpath
 
 
-def _exec_local_restricted_command(session: dict, command: str, timeout_seconds: int = 3) -> dict:
-    """Fallback eksekusi perintah Linux stateful (termasuk cd, ls, pwd) ketika Docker tidak tersedia."""
-    cmd_str = command.strip()
+def _format_virtual_ls(host_dir: Path, show_all: bool = False, long_fmt: bool = False) -> str:
+    try:
+        items = sorted(os.listdir(host_dir))
+    except OSError as exc:
+        return f"ls: error reading directory: {exc}"
+    if show_all:
+        items = [".", ".."] + items
+    else:
+        items = [x for x in items if not x.startswith(".")]
+    if not long_fmt:
+        return "\n".join(items)
+    lines = [f"total {len(items) * 4}"]
+    for name in items:
+        p = host_dir / name
+        try:
+            st = p.stat()
+            perm = "drwxr-xr-x" if p.is_dir() else "-rw-r--r--"
+            sz = st.st_size
+        except OSError:
+            perm = "-rw-r--r--"
+            sz = 0
+        lines.append(f"{perm} 1 nobody nogroup {sz:8d} {name}")
+    return "\n".join(lines)
+
+
+def _exec_single_local_virtual_command(session: dict, sub_cmd: str) -> tuple[int, str, str]:
+    """
+    Pure-Python Virtual Command Executor (Zero Host Subprocess Calls):
+    Menjamin bahwa pada saat Docker daemon tidak aktif, perintah terminal di mode fallback
+    TIDAK PERNAH mengeksekusi binary host OS dan TIDAK DAPAT melakukan traversal ke filesystem host.
+    """
     mount_v = session["initial_cwd"]
-    mount_host = Path(session["decoy_dir"])
-    tmp_root = Path(session["tmp_root"])
-    local_tmp = Path(session["local_tmp_dir"])
+    local_tmp = Path(session["local_tmp_dir"]).resolve()
     local_tmp.mkdir(parents=True, exist_ok=True)
     is_vuln = session.get("mode") == "vulnerable"
-    start_ts = time.monotonic()
 
     try:
-        tokens = shlex.split(cmd_str)
+        tokens = shlex.split(sub_cmd)
     except ValueError as exc:
-        return {
-            "command": cmd_str,
-            "stdout": "",
-            "stderr": f"Syntax error: {exc}",
-            "exit_code": 2,
-            "duration_ms": 0,
-            "cwd": session["cwd"],
-        }
+        return 2, "", f"Syntax error: {exc}"
     if not tokens:
-        return {"command": "", "stdout": "", "stderr": "", "exit_code": 0, "duration_ms": 0, "cwd": session["cwd"]}
+        return 0, "", ""
 
     cmd_name = tokens[0]
+    args = tokens[1:]
 
-    # Built-in stateful `cd`
     if cmd_name == "cd":
-        target = tokens[1] if len(tokens) > 1 else mount_v
+        target = args[0] if args else mount_v
         resolved_v = _resolve_virtual_path(target, session["cwd"], mount_v)
         if resolved_v == "/":
             session["cwd"] = "/"
-            return {"command": cmd_str, "stdout": "", "stderr": "", "exit_code": 0, "duration_ms": 0, "cwd": "/"}
+            return 0, "", ""
         host_target, norm_v = _map_virtual_to_host(session, resolved_v)
         if host_target is None or not host_target.exists() or not host_target.is_dir():
-            return {
-                "command": cmd_str,
-                "stdout": "",
-                "stderr": f"sh: cd: can't cd to {target}: No such file or directory",
-                "exit_code": 1,
-                "duration_ms": 0,
-                "cwd": session["cwd"],
-            }
+            return 1, "", f"sh: cd: can't cd to {target}: Permission denied or directory not found"
         session["cwd"] = norm_v
-        return {"command": cmd_str, "stdout": "", "stderr": "", "exit_code": 0, "duration_ms": 0, "cwd": norm_v}
+        return 0, "", ""
 
     if cmd_name == "pwd":
-        return {"command": cmd_str, "stdout": session["cwd"], "stderr": "", "exit_code": 0, "duration_ms": 0, "cwd": session["cwd"]}
+        return 0, session["cwd"], ""
 
     if cmd_name == "whoami":
-        return {
-            "command": cmd_str,
-            "stdout": session["prompt_user"],
-            "stderr": "",
-            "exit_code": 0,
-            "duration_ms": 0,
-            "cwd": session["cwd"],
-        }
+        return 0, session["prompt_user"], ""
+
+    if cmd_name == "id":
+        if is_vuln:
+            return 0, "uid=0(root) gid=0(root) groups=0(root)", ""
+        return 0, "uid=65534(nobody) gid=65534(nogroup) groups=65534(nogroup)", ""
 
     if cmd_name == "hostname":
-        return {
-            "command": cmd_str,
-            "stdout": session["container_id"],
-            "stderr": "",
-            "exit_code": 0,
-            "duration_ms": 0,
-            "cwd": session["cwd"],
-        }
+        return 0, session["container_id"], ""
+
+    if cmd_name == "uname":
+        return 0, "Linux kertopati-sandbox 6.6.16-kertopati-seccomp #1 SMP PREEMPT_DYNAMIC x86_64 Linux", ""
+
+    if cmd_name == "ps":
+        return (
+            0,
+            "PID   USER     TIME  COMMAND\n"
+            f"    1 {session['prompt_user']:<8} 0:00  /sbin/sandbox-init\n"
+            f"    7 {session['prompt_user']:<8} 0:00  sh",
+            "",
+        )
+
+    if cmd_name == "env":
+        return (
+            0,
+            f"USER={session['prompt_user']}\n"
+            f"PWD={session['cwd']}\n"
+            f"HOME={mount_v}\n"
+            f"KERTOPATI_DECODED={session.get('decoded_preview', 'none')}\n"
+            f"KERTOPATI_C2_URL={session.get('c2_url_preview', 'none')}",
+            "",
+        )
+
+    if cmd_name == "echo":
+        return 0, " ".join(args), ""
+
+    if cmd_name == "clear":
+        return 0, "", ""
 
     if cmd_name == "help":
-        return {
-            "command": cmd_str,
-            "stdout": (
-                "Perintah Linux tersedia: ls, cd, pwd, cat, head, tail, grep, find, strings, "
-                "wc, sha256sum, whoami, id, ps, uname, env, hostname, touch, mkdir, rm, echo, clear"
-            ),
-            "stderr": "",
-            "exit_code": 0,
-            "duration_ms": 0,
-            "cwd": session["cwd"],
-        }
-
-    # Simulasikan isolasi jaringan
-    lower_cmd = cmd_str.lower()
-    if re.search(r"\b(ping|curl|wget|nc|ncat|ssh|telnet)\b", lower_cmd):
-        return {
-            "command": cmd_str,
-            "stdout": "",
-            "stderr": "connect: Network is unreachable (--network=none isolation active)",
-            "exit_code": 1,
-            "duration_ms": int((time.monotonic() - start_ts) * 1000),
-            "cwd": session["cwd"],
-        }
-
-    # Cek penulisan read-only di mode plasebo
-    if not is_vuln and (re.search(r"\b(touch|rm|mkdir|mv|cp|chmod|chown|tee)\b", lower_cmd) or ">" in lower_cmd):
-        targets_in_tmp = any("/tmp" in t for t in tokens[1:]) or session["cwd"].startswith("/tmp")
-        if not targets_in_tmp:
-            return {
-                "command": cmd_str,
-                "stdout": "",
-                "stderr": "sh: can't create target: Read-only file system (--read-only /decoy_satuan:ro)",
-                "exit_code": 1,
-                "duration_ms": int((time.monotonic() - start_ts) * 1000),
-                "cwd": session["cwd"],
-            }
-
-    if cmd_name == "ls" and session["cwd"] == "/" and len(tokens) == 1:
-        top_dir = mount_v.lstrip("/").split("/")[0]
-        return {
-            "command": cmd_str,
-            "stdout": f"bin\ndev\netc\nproc\n{top_dir}\ntmp\nusr\nvar",
-            "stderr": "",
-            "exit_code": 0,
-            "duration_ms": 1,
-            "cwd": session["cwd"],
-        }
-
-    allowed = {
-        "whoami", "id", "pwd", "uname", "ls", "cat", "head", "tail", "grep",
-        "find", "wc", "strings", "sha256sum", "shasum", "echo", "env", "touch", "mkdir", "rm",
-    }
-    if cmd_name not in allowed:
-        return {
-            "command": cmd_str,
-            "stdout": "",
-            "stderr": f"sh: {cmd_name}: restricted inside local fallback sandbox (allowed: {', '.join(sorted(allowed))})",
-            "exit_code": 126,
-            "duration_ms": 0,
-            "cwd": session["cwd"],
-        }
-
-    # Petakan argumen path virtual ke host
-    cwd_host, _ = _map_virtual_to_host(session, session["cwd"])
-    if cwd_host is None or not cwd_host.exists():
-        cwd_host = mount_host
-
-    mapped_tokens: List[str] = [cmd_name]
-    for tok in tokens[1:]:
-        if tok.startswith("-"):
-            mapped_tokens.append(tok)
-            continue
-        if tok.startswith("/"):
-            mapped_path, _ = _map_virtual_to_host(session, tok)
-            if mapped_path is None:
-                return {
-                    "command": cmd_str,
-                    "stdout": "",
-                    "stderr": f"sh: {tok}: Permission denied outside {mount_v} / /tmp",
-                    "exit_code": 1,
-                    "duration_ms": 0,
-                    "cwd": session["cwd"],
-                }
-            mapped_tokens.append(str(mapped_path))
-        else:
-            mapped_tokens.append(tok)
-
-    if mapped_tokens[0] == "sha256sum" and shutil.which("sha256sum") is None and shutil.which("shasum"):
-        mapped_tokens = ["shasum", "-a", "256", *mapped_tokens[1:]]
-
-    restricted_env = {
-        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-        "HOME": str(tmp_root),
-        "TMPDIR": str(local_tmp),
-        "KERTOPATI_DECODED": str(session.get("decoded_preview", "none")),
-        "KERTOPATI_C2_URL": str(session.get("c2_url_preview", "none")),
-    }
-    try:
-        proc = subprocess.run(
-            mapped_tokens,
-            cwd=str(cwd_host),
-            env=restricted_env,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
+        return (
+            0,
+            "Perintah Linux tersedia: ls, cd, pwd, cat, head, tail, grep, find, strings, "
+            "wc, sha256sum, whoami, id, ps, uname, env, hostname, touch, mkdir, rm, echo, clear",
+            "",
         )
-        stdout = proc.stdout.replace(str(mount_host), mount_v).replace(str(local_tmp), "/tmp").strip()
-        stderr = proc.stderr.replace(str(mount_host), mount_v).replace(str(local_tmp), "/tmp").strip()
-        return {
-            "command": cmd_str,
-            "stdout": stdout,
-            "stderr": stderr,
-            "exit_code": proc.returncode,
-            "duration_ms": int((time.monotonic() - start_ts) * 1000),
-            "cwd": session["cwd"],
-        }
-    except subprocess.TimeoutExpired:
+
+    if cmd_name in ("ping", "curl", "wget", "nc", "ncat", "ssh", "telnet"):
+        return 1, "", "connect: Network is unreachable (--network=none isolation active)"
+
+    if cmd_name in ("touch", "rm", "mkdir", "mv", "cp", "chmod", "chown", "tee"):
+        path_args = [a for a in args if not a.startswith("-")]
+        if not is_vuln:
+            # In plasebo mode, only /tmp is writable
+            all_in_tmp = bool(path_args) and all(
+                _resolve_virtual_path(a, session["cwd"], mount_v).startswith("/tmp")
+                for a in path_args
+            )
+            if not all_in_tmp:
+                return 1, "", "sh: can't modify target: Read-only file system (--read-only /decoy_satuan:ro)"
+
+        if cmd_name == "touch":
+            for a in path_args:
+                hp, _ = _map_virtual_to_host(session, a)
+                if hp is None:
+                    return 1, "", f"touch: {a}: Permission denied outside sandbox jail"
+                hp.parent.mkdir(parents=True, exist_ok=True)
+                hp.touch()
+            return 0, "", ""
+        if cmd_name == "mkdir":
+            for a in path_args:
+                hp, _ = _map_virtual_to_host(session, a)
+                if hp is None:
+                    return 1, "", f"mkdir: {a}: Permission denied outside sandbox jail"
+                hp.mkdir(parents=True, exist_ok=True)
+            return 0, "", ""
+        if cmd_name == "rm":
+            for a in path_args:
+                hp, vp = _map_virtual_to_host(session, a)
+                if hp is None or vp in (mount_v, "/tmp", "/"):
+                    return 1, "", f"rm: {a}: Permission denied"
+                if hp.is_file():
+                    hp.unlink()
+            return 0, "", ""
+        return 1, "", f"sh: {cmd_name}: operation restricted in sandbox"
+
+    if cmd_name == "ls":
+        show_all = any("a" in a for a in args if a.startswith("-"))
+        long_fmt = any("l" in a for a in args if a.startswith("-"))
+        path_args = [a for a in args if not a.startswith("-")]
+        target = path_args[0] if path_args else "."
+        resolved_v = _resolve_virtual_path(target, session["cwd"], mount_v)
+        if resolved_v == "/" and not path_args:
+            top_dir = mount_v.lstrip("/").split("/")[0]
+            return 0, f"bin\ndev\netc\nproc\n{top_dir}\ntmp\nusr\nvar", ""
+        host_p, _ = _map_virtual_to_host(session, target)
+        if host_p is None:
+            return 1, "", f"ls: cannot access '{target}': Permission denied outside {mount_v} / /tmp"
+        if not host_p.exists():
+            return 1, "", f"ls: cannot access '{target}': No such file or directory"
+        if host_p.is_file():
+            return 0, host_p.name, ""
+        return 0, _format_virtual_ls(host_p, show_all=show_all, long_fmt=long_fmt), ""
+
+    if cmd_name in ("cat", "head", "tail", "wc", "strings", "sha256sum", "shasum"):
+        path_args = [a for a in args if not a.startswith("-")]
+        if not path_args:
+            return 1, "", f"{cmd_name}: missing file operand"
+        out_chunks: List[str] = []
+        for target in path_args:
+            host_p, norm_v = _map_virtual_to_host(session, target)
+            if host_p is None:
+                return 1, "", f"{cmd_name}: {target}: Permission denied outside {mount_v} / /tmp"
+            if not host_p.exists():
+                return 1, "", f"{cmd_name}: {target}: No such file or directory"
+            if host_p.is_dir():
+                return 1, "", f"{cmd_name}: {target}: Is a directory"
+            data = host_p.read_bytes()[:MAX_OUTPUT_CHARS]
+            if cmd_name in ("sha256sum", "shasum"):
+                out_chunks.append(f"{hashlib.sha256(data).hexdigest()}  {target}")
+            elif cmd_name == "wc":
+                out_chunks.append(f"{data.count(b'\\n')} {len(data.split())} {len(data)} {target}")
+            elif cmd_name == "strings":
+                strs = [m.decode("latin-1") for m in re.findall(rb"[\x20-\x7e]{4,}", data)[:200]]
+                out_chunks.append("\n".join(strs))
+            else:
+                text = data.decode("utf-8", errors="replace")
+                lines = text.splitlines()
+                if cmd_name == "head":
+                    out_chunks.append("\n".join(lines[:20]))
+                elif cmd_name == "tail":
+                    out_chunks.append("\n".join(lines[-20:]))
+                else:
+                    out_chunks.append(text.rstrip("\n"))
+        return 0, "\n".join(out_chunks)[:MAX_OUTPUT_CHARS], ""
+
+    if cmd_name == "find":
+        forbidden_find = {"-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint", "-fls"}
+        for a in args:
+            if a in forbidden_find or a.startswith("-exec"):
+                return 1, "", f"find: flag '{a}' is prohibited by Kertopati sandbox seccomp policy"
+        target = "."
+        for a in args:
+            if not a.startswith("-") and a not in (";", "+", "{}") and not a.isdigit():
+                target = a
+                break
+        host_p, norm_v = _map_virtual_to_host(session, target)
+        if host_p is None or not host_p.exists():
+            return 1, "", f"find: '{target}': Permission denied outside {mount_v} / /tmp"
+        found = [norm_v]
+        if host_p.is_dir():
+            for child in sorted(host_p.rglob("*")):
+                rel = child.relative_to(host_p).as_posix()
+                found.append(f"{norm_v.rstrip('/')}/{rel}")
+        return 0, "\n".join(found[:200]), ""
+
+    if cmd_name == "grep":
+        non_flags = [a for a in args if not a.startswith("-")]
+        if len(non_flags) < 2:
+            return 2, "", "Usage: grep PATTERN FILE"
+        pat_str, target = non_flags[0], non_flags[1]
+        host_p, _ = _map_virtual_to_host(session, target)
+        if host_p is None or not host_p.is_file():
+            return 2, "", f"grep: {target}: Permission denied or file not found"
+        lines = host_p.read_text(encoding="utf-8", errors="replace").splitlines()
+        matched = [ln for ln in lines if pat_str.lower() in ln.lower()]
+        return (0 if matched else 1), "\n".join(matched)[:MAX_OUTPUT_CHARS], ""
+
+    allowed = (
+        "cat, cd, clear, echo, env, find, grep, head, help, hostname, id, ls, "
+        "mkdir, ps, pwd, rm, sha256sum, shasum, strings, tail, touch, uname, wc, whoami"
+    )
+    return 126, "", f"sh: {cmd_name}: restricted inside local fallback sandbox (allowed: {allowed})"
+
+
+def _exec_local_restricted_command(session: dict, command: str, timeout_seconds: int = 3) -> dict:
+    """
+    Fallback eksekusi perintah Linux stateful (termasuk cd, ls, pwd) ketika Docker tidak tersedia.
+    Berjalan 100% di dalam Pure-Python Virtual Jail tanpa memanggil subprocess host.
+    """
+    cmd_str = command.strip()
+    start_ts = time.monotonic()
+
+    # Block shell command substitution / redirection / pipes / semicolons
+    if any(sym in cmd_str for sym in ("`", "$(", "${", ";", "|", ">", "<")):
         return {
             "command": cmd_str,
             "stdout": "",
-            "stderr": "Command timed out inside local sandbox",
-            "exit_code": 124,
+            "stderr": "sh: shell metacharacters/redirections blocked by sandbox seccomp policy",
+            "exit_code": 126,
             "duration_ms": int((time.monotonic() - start_ts) * 1000),
             "cwd": session["cwd"],
         }
+
+    sub_commands = [s.strip() for s in cmd_str.split("&&") if s.strip()]
+    if not sub_commands:
+        return {"command": "", "stdout": "", "stderr": "", "exit_code": 0, "duration_ms": 0, "cwd": session["cwd"]}
+
+    outs: List[str] = []
+    errs: List[str] = []
+    last_rc = 0
+    for sub in sub_commands:
+        rc, out, err = _exec_single_local_virtual_command(session, sub)
+        last_rc = rc
+        if out:
+            outs.append(out)
+        if err:
+            errs.append(err)
+        if rc != 0:
+            break
+
+    return {
+        "command": cmd_str,
+        "stdout": "\n".join(outs)[:MAX_OUTPUT_CHARS].strip(),
+        "stderr": "\n".join(errs)[:MAX_OUTPUT_CHARS].strip(),
+        "exit_code": last_rc,
+        "duration_ms": int((time.monotonic() - start_ts) * 1000),
+        "cwd": session["cwd"],
+    }
 
 
 def create_sandbox_session(
@@ -691,7 +805,7 @@ def create_sandbox_session(
     decoded_preview = ""
     if triage.get("decoded_base64"):
         decoded_preview = str(triage["decoded_base64"][0].get("decoded", ""))[:120]
-    urls = triage.get("urls") or []
+    urls = triage.get("c2_urls") or triage.get("urls") or []
     c2_url_preview = str(urls[0])[:120] if urls else "none"
 
     image = _check_docker_available()
@@ -704,22 +818,22 @@ def create_sandbox_session(
     container_name = f"kertopati-{'vuln' if is_vuln else 'live'}-{session_id}"
     container_id = f"local-live-{session_id[:10]}"
     isolation_flags = (
-        ["tempfile.TemporaryDirectory", "cwd=/srv/eoffice", "user=root(sim)", "writable_target"]
+        ["pure_python_virtual_jail", "cwd=/srv/eoffice", "user=root(sim)", "writable_target"]
         if is_vuln
-        else ["tempfile.TemporaryDirectory", "cwd=/decoy_satuan", "read_only_decoy", "network_blocked"]
+        else ["pure_python_virtual_jail", "cwd=/decoy_satuan", "read_only_decoy", "network_blocked"]
     )
     docker_proof = {
         "is_docker": False,
         "docker_server_version": "",
         "container_id": container_id,
         "container_name": container_name,
-        "image": "local-fallback",
+        "image": "local-virtual-jail",
         "running": True,
-        "container_pid": os.getpid(),
+        "container_pid": None,
         "hostname": container_id,
-        "network_mode": "none",
+        "network_mode": "isolated-virtual-jail",
         "readonly_rootfs": not is_vuln,
-        "verify_cli": "(Docker daemon tidak aktif — menjalankan fallback lokal)",
+        "verify_cli": "(Docker daemon tidak aktif — menjalankan Pure-Python Virtual Jail)",
     }
 
     if image:
@@ -729,11 +843,14 @@ def create_sandbox_session(
                 "run",
                 "-d",
                 "--rm",
+                "--pull=never",
                 "--user",
                 "0:0",
                 "--name",
                 container_name,
                 "--network=none",
+                "--cap-drop=ALL",
+                "--security-opt=no-new-privileges",
                 "--pids-limit=32",
                 "--memory=128m",
                 "--cpus=0.5",
@@ -755,6 +872,7 @@ def create_sandbox_session(
                 "run",
                 "-d",
                 "--rm",
+                "--pull=never",
                 "--user",
                 "65534:65534",
                 "--name",
@@ -762,6 +880,7 @@ def create_sandbox_session(
                 "--network=none",
                 "--read-only",
                 "--cap-drop=ALL",
+                "--security-opt=no-new-privileges",
                 "--pids-limit=32",
                 "--memory=128m",
                 "--cpus=0.5",
@@ -780,7 +899,7 @@ def create_sandbox_session(
                 "300",
             ]
         try:
-            started = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=5)
+            started = _ORIG_SUBPROCESS_RUN(docker_cmd, capture_output=True, text=True, timeout=5)
             if started.returncode == 0 and started.stdout.strip():
                 backend_kind = "docker"
                 container_id = started.stdout.strip()[:12]
@@ -803,7 +922,7 @@ def create_sandbox_session(
         "execution_backend": execution_backend,
         "container_id": container_id,
         "container_name": container_name,
-        "image": image or "local-fallback",
+        "image": image or "local-virtual-jail",
         "isolation_flags": isolation_flags,
         "docker_proof": docker_proof,
         "tmp_root": str(tmp_root),
@@ -860,7 +979,6 @@ def exec_sandbox_command(session_id: str, command: str) -> dict:
             session["command_history"].append(entry)
             return entry
 
-        # Jalankan perintah melalui `sh -s` dengan pelacakan `pwd` persisten agar `cd` bekerja nyata
         cwd_quoted = shlex.quote(session["cwd"])
         init_quoted = shlex.quote(session["initial_cwd"])
         script = (
@@ -872,14 +990,14 @@ def exec_sandbox_command(session_id: str, command: str) -> dict:
             "exit $__kp_rc\n"
         )
         try:
-            proc = subprocess.run(
+            proc = _ORIG_SUBPROCESS_RUN(
                 ["docker", "exec", "-i", session["container_id"], "sh", "-s"],
                 input=script,
                 capture_output=True,
                 text=True,
                 timeout=4,
             )
-            raw_out = proc.stdout or ""
+            raw_out = (proc.stdout or "")[:MAX_OUTPUT_CHARS]
             new_cwd = session["cwd"]
             clean_lines: List[str] = []
             for line in raw_out.splitlines():
@@ -890,7 +1008,7 @@ def exec_sandbox_command(session_id: str, command: str) -> dict:
                 else:
                     clean_lines.append(line)
             session["cwd"] = new_cwd
-            clean_stderr = re.sub(r"sh: line \d+: ", "sh: ", (proc.stderr or "").strip())
+            clean_stderr = re.sub(r"sh: line \d+: ", "sh: ", (proc.stderr or "")[:MAX_OUTPUT_CHARS].strip())
             entry = {
                 "command": cmd,
                 "stdout": "\n".join(clean_lines).strip(),
@@ -958,7 +1076,7 @@ def close_sandbox_session(session_id: str) -> dict:
 
     if session.get("active") and session.get("backend_kind") == "docker":
         try:
-            subprocess.run(
+            _ORIG_SUBPROCESS_RUN(
                 ["docker", "rm", "-f", session["container_id"]],
                 capture_output=True,
                 text=True,

@@ -1,6 +1,7 @@
 import argparse
 import json
 import mimetypes
+import re
 import shutil
 import socket
 import sys
@@ -38,11 +39,12 @@ def _encode_multipart(
                 f"{v}\r\n"
             ).encode("utf-8")
         )
-    ctype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    safe_filename = re.sub(r'["\r\n\\]', "_", filename)
+    ctype = mimetypes.guess_type(safe_filename)[0] or "application/octet-stream"
     parts.append(
         (
             f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name="{file_field}"; filename="{filename}"\r\n'
+            f'Content-Disposition: form-data; name="{file_field}"; filename="{safe_filename}"\r\n'
             f"Content-Type: {ctype}\r\n\r\n"
         ).encode("utf-8")
         + file_bytes
@@ -123,56 +125,74 @@ def run_agent_cycle(
     for item in sorted(watch_path.iterdir()):
         if not item.is_file() or item.name.startswith("."):
             continue
-        raw_bytes = item.read_bytes()
-        resp = uploader(
-            f"{base_url}/api/upload",
-            {"source_unit": source_unit, "target_unit": target_unit},
-            item.name,
-            raw_bytes,
-        )
-        soc_view = resp.get("soc_view") or {}
-        verdict = soc_view.get("verdict", "INFECTED_SANDBOXED")
-        files_audited += 1
-        last_file = item.name
-
-        if verdict == "CLEAN":
-            shutil.move(str(item), str(clean_path / item.name))
-            clean_count += 1
-            results.append({"filename": item.name, "verdict": verdict})
-        else:
-            shutil.move(str(item), str(quarantine_path / item.name))
-            infected_count += 1
-            sb_event = soc_view.get("sandbox_event") or {}
-            ai_info = sb_event.get("ai_analysis")
-            if not ai_info:
-                # Pastikan pipeline ai_analyst.py dipicu jika belum tersedia dari respons
-                details = soc_view.get("details") or {}
-                synthesis = analyze_threat_and_synthesize_vaccine(
-                    filename=item.name,
-                    raw_bytes=raw_bytes,
-                    source_unit=source_unit,
-                    file_format=str(details.get("file_format") or "UNKNOWN"),
-                    inspection_reasons=list(sb_event.get("reasons") or details.get("reasons") or ["Malicious artifact detected"]),
-                    dangerous_tags=list(details.get("dangerous_tags") or []),
-                )
-                ai_info = synthesis.get("ai_analysis") or {}
-                vaccine_rule = synthesis.get("rule_name", "")
-            else:
-                vaccine_rule = sb_event.get("generated_vaccine", "")
-
-            if vaccine_rule or ai_info:
-                vaccines_generated += 1
-            mitre_list = list(ai_info.get("mitre_attack") or [])
-            if mitre_list:
-                last_mitre_techniques = mitre_list
-            results.append(
-                {
-                    "filename": item.name,
-                    "verdict": verdict,
-                    "vaccine_rule": vaccine_rule,
-                    "mitre_attack": mitre_list,
-                }
+        try:
+            raw_bytes = item.read_bytes()
+            resp = uploader(
+                f"{base_url}/api/upload",
+                {"source_unit": source_unit, "target_unit": target_unit},
+                item.name,
+                raw_bytes,
             )
+            soc_view = resp.get("soc_view") or {}
+            verdict = soc_view.get("verdict", "INFECTED_SANDBOXED")
+            files_audited += 1
+            last_file = item.name
+
+            if verdict == "CLEAN":
+                cdr_info = soc_view.get("cdr") or {}
+                dl_url = cdr_info.get("download_url")
+                wrote_cdr = False
+                if dl_url and upload_fn is None:
+                    try:
+                        full_dl = dl_url if dl_url.startswith("http") else f"{base_url}{dl_url}"
+                        with urllib.request.urlopen(full_dl, timeout=10.0) as dl_resp:
+                            sanitized_bytes = dl_resp.read()
+                        if sanitized_bytes:
+                            (clean_path / item.name).write_bytes(sanitized_bytes)
+                            item.unlink(missing_ok=True)
+                            wrote_cdr = True
+                    except Exception:
+                        wrote_cdr = False
+                if not wrote_cdr:
+                    shutil.move(str(item), str(clean_path / item.name))
+                clean_count += 1
+                results.append({"filename": item.name, "verdict": verdict})
+            else:
+                shutil.move(str(item), str(quarantine_path / item.name))
+                infected_count += 1
+                sb_event = soc_view.get("sandbox_event") or {}
+                ai_info = sb_event.get("ai_analysis")
+                if not ai_info:
+                    # Pastikan pipeline ai_analyst.py dipicu jika belum tersedia dari respons
+                    details = soc_view.get("details") or {}
+                    synthesis = analyze_threat_and_synthesize_vaccine(
+                        filename=item.name,
+                        raw_bytes=raw_bytes,
+                        source_unit=source_unit,
+                        file_format=str(details.get("file_format") or "UNKNOWN"),
+                        inspection_reasons=list(sb_event.get("reasons") or details.get("reasons") or ["Malicious artifact detected"]),
+                        dangerous_tags=list(details.get("dangerous_tags_found") or details.get("dangerous_tags") or []),
+                    )
+                    ai_info = synthesis.get("ai_analysis") or {}
+                    vaccine_rule = synthesis.get("rule_name", "")
+                else:
+                    vaccine_rule = sb_event.get("generated_vaccine", "")
+
+                if vaccine_rule or ai_info:
+                    vaccines_generated += 1
+                mitre_list = list(ai_info.get("mitre_attack") or [])
+                if mitre_list:
+                    last_mitre_techniques = mitre_list
+                results.append(
+                    {
+                        "filename": item.name,
+                        "verdict": verdict,
+                        "vaccine_rule": vaccine_rule,
+                        "mitre_attack": mitre_list,
+                    }
+                )
+        except Exception as exc:
+            results.append({"filename": item.name, "verdict": "ERROR", "error": str(exc)})
 
     hb_payload = {
         "agent_id": agent_id or f"kertopati-ai-agent-{socket.gethostname()}",

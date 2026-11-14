@@ -1,10 +1,50 @@
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
-from app.ai_analyst import analyze_threat_and_synthesize_vaccine
+from app.ai_analyst import (
+    _sanitize_meta_value,
+    _yara_escape_string,
+    analyze_threat_and_synthesize_vaccine,
+    validate_vaccine_pattern,
+)
+
+RULE_NAME_RE = re.compile(r"^[A-Za-z0-9_-]{3,64}$")
+
+FORBIDDEN_OVERBROAD_PATTERNS = {
+    "%pdf",
+    "%pdf-",
+    "%pdf-1.",
+    "obj",
+    "endobj",
+    "stream",
+    "endstream",
+    "xref",
+    "trailer",
+    "startxref",
+    "%%eof",
+    "/type",
+    "/page",
+    "/pages",
+    "/catalog",
+    "/font",
+    "/filter",
+    "/flatedecode",
+    "/byterange",
+    "/contents",
+    "jfif",
+    "ihdr",
+    "idat",
+    "iend",
+    "pk\x03\x04",
+    "xml",
+    "xmlns",
+    "http://",
+    "https://",
+}
 
 
 class SandboxVaccineEngine:
@@ -54,7 +94,8 @@ class SandboxVaccineEngine:
         timestamp = datetime.now(timezone.utc).isoformat()
 
         # 1. Simpan salinan terisolasi ke Sandbox Quarantine
-        quarantine_file = self.quarantine_dir / f"{doc_hash[:12]}_{Path(filename).name}"
+        safe_fn = re.sub(r"[^A-Za-z0-9._-]", "_", Path(filename).name) or "sample.bin"
+        quarantine_file = self.quarantine_dir / f"{doc_hash[:12]}_{safe_fn}"
         quarantine_file.write_bytes(raw_bytes)
 
         # 2. Siapkan baseline sampel bersih untuk ABLE Self-Validation Gate
@@ -80,11 +121,13 @@ class SandboxVaccineEngine:
         rule_name = str(synthesis["rule_name"])
         yara_content = str(synthesis["yara_rule"])
         ai_analysis = synthesis["ai_analysis"]
+        validation_status = str(ai_analysis.get("validation_status", ""))
+        is_validated = validation_status.startswith("VALIDATED")
 
         yara_path = self.vaccine_dir / f"{rule_name}.yar"
         yara_path.write_text(yara_content, encoding="utf-8")
 
-        # 4. Daftarkan vaksin aktif ke Policy Engine (termasuk AI Threat Intel untuk export/import)
+        # 4. Daftarkan vaksin ke Policy Engine (hanya aktif otomatis jika lulus Self-Validation Gate)
         vaccines = self.get_active_vaccines()
         if not any(v["pattern"] == extracted_ioc for v in vaccines):
             vaccines.insert(
@@ -93,7 +136,7 @@ class SandboxVaccineEngine:
                     "rule_name": rule_name,
                     "pattern": extracted_ioc,
                     "file_format": fmt,
-                    "enabled": True,
+                    "enabled": is_validated,
                     "created_at": timestamp,
                     "yara_file": str(yara_path.name),
                     "yara_preview": yara_content,
@@ -192,42 +235,82 @@ class SandboxVaccineEngine:
         }
 
     def import_vaccines(self, bundle: dict | list) -> dict:
-        """Mengimpor bundle vaksin dari Pusat ke node Kodim/Korem secara offline."""
+        """
+        Mengimpor bundle vaksin dari Pusat ke node Kodim/Korem secara offline.
+        Memvalidasi nama rule (anti-XSS/injeksi) dan menguji setiap pattern dengan
+        Self-Validation Gate agar pola terlalu umum (mis. '%PDF') ditolak otomatis.
+        """
         incoming = bundle.get("vaccines", []) if isinstance(bundle, dict) else bundle
         if not isinstance(incoming, list):
             raise ValueError("Format bundle vaksin tidak valid.")
+
+        clean_baselines: List[bytes] = []
+        demo_dir = Path(__file__).resolve().parent.parent / "demo_samples"
+        if demo_dir.exists():
+            for sample_path in demo_dir.iterdir():
+                if sample_path.is_file() and "bersih" in sample_path.name.lower():
+                    clean_baselines.append(sample_path.read_bytes())
 
         vaccines = self.get_active_vaccines()
         existing_names = {v["rule_name"] for v in vaccines}
         existing_patterns = {v["pattern"] for v in vaccines}
         imported_count = 0
+        rejected_count = 0
 
         for item in incoming:
             if not isinstance(item, dict):
+                rejected_count += 1
                 continue
-            rule_name = item.get("rule_name")
-            pattern = item.get("pattern")
+            rule_name = str(item.get("rule_name") or "").strip()
+            pattern = str(item.get("pattern") or "").strip()
             if not rule_name or not pattern:
+                rejected_count += 1
                 continue
+            if not RULE_NAME_RE.match(rule_name):
+                rejected_count += 1
+                continue
+            if len(pattern) < 5 or pattern.lower() in FORBIDDEN_OVERBROAD_PATTERNS:
+                rejected_count += 1
+                continue
+
+            gate = validate_vaccine_pattern(
+                patterns=[pattern],
+                malicious_bytes=pattern.encode("utf-8", errors="ignore"),
+                clean_samples=clean_baselines,
+            )
+            if gate["false_positive_test"] != "PASS" or gate["recall_test"] != "PASS":
+                rejected_count += 1
+                continue
+
             if rule_name in existing_names or pattern in existing_patterns:
                 continue
 
-            yara_preview = item.get("yara_preview") or (
-                f'rule {rule_name} {{\n    strings:\n        $ioc = "{pattern}" ascii nocase\n'
-                f'    condition:\n        uint32(0) == 0x46445025 and $ioc\n}}\n'
+            escaped_pat = _yara_escape_string(pattern)
+            safe_fmt = _sanitize_meta_value(item.get("file_format", "UNKNOWN"), 32)
+            yara_preview = (
+                f"rule {rule_name} {{\n"
+                f"    meta:\n"
+                f'        author = "Kertopati AI Threat Analyst"\n'
+                f'        file_format = "{safe_fmt}"\n'
+                f'        validation_status = "VALIDATED (0% FP on Baseline)"\n'
+                f"    strings:\n"
+                f'        $ioc = "{escaped_pat}" ascii nocase\n'
+                f"    condition:\n"
+                f"        uint32(0) == 0x46445025 and $ioc\n"
+                f"}}\n"
             )
-            yara_file = item.get("yara_file") or f"{rule_name}.yar"
-            (self.vaccine_dir / Path(yara_file).name).write_text(yara_preview, encoding="utf-8")
+            yara_file = f"{rule_name}.yar"
+            (self.vaccine_dir / yara_file).write_text(yara_preview, encoding="utf-8")
 
             vaccines.insert(
                 0,
                 {
                     "rule_name": rule_name,
                     "pattern": pattern,
-                    "file_format": item.get("file_format", "UNKNOWN"),
+                    "file_format": safe_fmt,
                     "enabled": bool(item.get("enabled", True)),
                     "created_at": item.get("created_at") or datetime.now(timezone.utc).isoformat(),
-                    "yara_file": Path(yara_file).name,
+                    "yara_file": yara_file,
                     "yara_preview": yara_preview,
                     "ai_analysis": item.get("ai_analysis") or {},
                 },
@@ -239,5 +322,6 @@ class SandboxVaccineEngine:
         self.rules_index_path.write_text(json.dumps(vaccines, indent=2), encoding="utf-8")
         return {
             "imported_count": imported_count,
+            "rejected_count": rejected_count,
             "total_vaccines": len(vaccines),
         }
