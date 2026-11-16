@@ -711,6 +711,11 @@ async def toggle_vaccine(rule_name: str):
 @app.get("/api/vaccines/export")
 async def export_vaccines():
     bundle = sandbox_engine.export_vaccines()
+    if bundle.get("count", 0) == 0:
+        return JSONResponse(
+            {"error": "Belum ada vaksin yang diterbitkan untuk diekspor."},
+            status_code=400,
+        )
     return JSONResponse(
         content=bundle,
         headers={"Content-Disposition": 'attachment; filename="sandiseal_vaccines_bundle.json"'},

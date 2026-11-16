@@ -261,6 +261,9 @@ def test_vaccine_toggle_export_and_import(isolated_client, tmp_path):
     """5(c) Toggle vaksin (nonaktif tidak memblokir, aktif memblokir) serta export & import bundle."""
     client, _, test_sandbox, _ = isolated_client
 
+    # Sebelum ada vaksin, export bundle harus 400 (disabled/kosong)
+    assert client.get("/api/vaccines/export").status_code == 400
+
     # Trigger vaksin baru dari PDF terinfeksi
     evil_pdf = tmp_path / "evil.pdf"
     build_infected_shadow_pdf(evil_pdf)
@@ -304,6 +307,7 @@ def test_vaccine_toggle_export_and_import(isolated_client, tmp_path):
     # Reset lalu import kembali bundle
     client.post("/api/demo/reset")
     assert len(test_sandbox.get_active_vaccines()) == 0
+    assert client.get("/api/vaccines/export").status_code == 400
 
     imp_resp = client.post("/api/vaccines/import", json=bundle)
     assert imp_resp.status_code == 200
@@ -1151,7 +1155,7 @@ def test_gemini_retry_on_timeout_up_to_10_then_offline_fallback(monkeypatch, tmp
         dangerous_tags=["/JS", "/OpenAction"],
     )
     assert attempts_ok["count"] == 4
-    assert res_ok["ai_analysis"]["analysis_mode"] == "Gemini AI (gemini-flash-lite-latest)"
+    assert res_ok["ai_analysis"]["analysis_mode"] == "General LLM AI"
     assert "Ringkasan Gemini setelah retry." in res_ok["ai_analysis"]["commander_brief"]
 
     # 2. Timeout terus 10x -> berhenti di 10x & fallback ke Offline Evidence-Based Engine

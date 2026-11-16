@@ -502,7 +502,7 @@ def _synthesize_commander_brief(
             timeout=6.0,
         )
         if gem_text:
-            return gem_text, f"Gemini AI ({gemini_model})"
+            return gem_text, "General LLM AI"
 
     # Prioritas 2: Offline Evidence-Based Engine (tanpa kalimat generik/dongeng)
     safe_fn = _sanitize_meta_value(filename, 80)
