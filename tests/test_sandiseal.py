@@ -257,6 +257,144 @@ def test_multihop_and_tamper_simulation(isolated_client):
     assert tamper_data["soc_view"]["tampered_block_index"] == 2
 
 
+def test_interactive_ledger_hacker_attacks_and_inspect(isolated_client):
+    """Uji endpoint Konsol Hacker Ledger (/api/ledger/inspect & /api/ledger/attack): Edit, Re-Hash Cascade, Truncation."""
+    client, _, _, _ = isolated_client
+
+    # Seed 3-hop bersih terlebih dahulu
+    mh_resp = client.post("/api/demo/multihop")
+    assert mh_resp.status_code == 200
+    assert mh_resp.json()["soc_view"]["cdr"]["original_sha256"]
+
+    # 1. Inspect awal harus valid 100%
+    insp0 = client.get("/api/ledger/inspect").json()
+    assert insp0["verification"]["valid"] is True
+    assert insp0["head_checkpoint"]["head_hmac_valid"] is True
+    assert insp0["head_checkpoint"]["actual_count"] == 3
+    assert all(b["hmac_valid"] and b["prev_link_valid"] for b in insp0["blocks"])
+
+    # 2. Serangan Level 1: Edit Field SQLite langsung pada Blok #2
+    atk1 = client.post(
+        "/api/ledger/attack",
+        json={
+            "attack_type": "edit_field",
+            "block_index": 2,
+            "updates": {"verdict": "CLEAN [BYPASSED]", "target_unit": "Unit Eksternal"},
+        },
+    )
+    assert atk1.status_code == 200
+    d1 = atk1.json()
+    assert d1["soc_view"]["verification"]["valid"] is False
+    assert "MUTATE BLOCK #2" in d1["soc_view"]["mutation_ops"][0]
+    assert "custody_blocks" not in str(d1)
+    assert "ledger.db" not in str(d1)
+    b2_insp = next(b for b in d1["inspection"]["blocks"] if b["block_index"] == 2)
+    assert b2_insp["hmac_valid"] is False
+    assert b2_insp["verdict"] == "CLEAN [BYPASSED]"
+
+    # Reset & seed ulang, lalu Serangan Level 2: Naive SHA-256 Re-Hash Cascade Attack
+    client.post("/api/demo/reset")
+    client.post("/api/demo/multihop")
+    atk2 = client.post(
+        "/api/ledger/attack",
+        json={
+            "attack_type": "rehash_cascade",
+            "block_index": 2,
+            "updates": {"verdict": "CLEAN [FORGED]"},
+        },
+    )
+    assert atk2.status_code == 200
+    d2 = atk2.json()
+    assert d2["soc_view"]["rehashed_blocks_count"] == 2
+    assert d2["soc_view"]["verification"]["valid"] is False
+    b3_insp = next(b for b in d2["inspection"]["blocks"] if b["block_index"] == 3)
+    # prev_hash blok #3 sengaja disambungkan penyerang ke SHA-256 blok #2, namun tetap tertangkap HMAC
+    assert b3_insp["prev_link_valid"] is True
+    assert b3_insp["plain_sha_matched_stored"] is True
+    assert b3_insp["hmac_valid"] is False
+
+    # Reset & seed ulang, lalu Serangan Level 3: Truncation Attack (hapus blok terakhir)
+    client.post("/api/demo/reset")
+    client.post("/api/demo/multihop")
+    atk3 = client.post("/api/ledger/attack", json={"attack_type": "truncate_last"})
+    assert atk3.status_code == 200
+    d3 = atk3.json()
+    assert d3["soc_view"]["deleted_block_index"] == 3
+    assert d3["soc_view"]["verification"]["valid"] is False
+    assert d3["soc_view"]["verification"]["tampered_blocks"][0]["filename"] == "CHAIN_TRUNCATION"
+    assert d3["inspection"]["head_checkpoint"]["count_matches"] is False
+
+    # Serangan tidak dikenal -> 400
+    bad_atk = client.post("/api/ledger/attack", json={"attack_type": "unknown_attack"})
+    assert bad_atk.status_code == 400
+
+
+def test_document_tamper_and_verify_against_ledger(isolated_client, tmp_path):
+    """Uji Verifikasi & Modifikasi Isi Dokumen (Off-Chain File vs Ledger doc_sha256 + Spoof SQLite)."""
+    client, _, _, sanitized_dir = isolated_client
+
+    mh_resp = client.post("/api/demo/multihop")
+    assert mh_resp.status_code == 200
+
+    # 1. File asli (Kodim) cocok dengan Blok #1
+    v_orig = client.post(
+        "/api/ledger/verify-document",
+        data={"sample_mode": "original_clean", "block_index": "1"},
+    )
+    assert v_orig.status_code == 200
+    assert v_orig.json()["verdict"] == "AUTHENTIC_VERIFIED"
+    assert v_orig.json()["authentic"] is True
+
+    # 2. File steril CDR cocok dengan Blok #3
+    v_cdr = client.post(
+        "/api/ledger/verify-document",
+        data={"sample_mode": "sanitized_cdr", "block_index": "3"},
+    )
+    assert v_cdr.status_code == 200
+    assert v_cdr.json()["verdict"] == "AUTHENTIC_VERIFIED"
+
+    # 3. Modifikasi 1 byte pada PDF -> DOCUMENT_TAMPERED
+    v_1b = client.post(
+        "/api/ledger/verify-document",
+        data={"sample_mode": "tamper_1byte", "block_index": "3"},
+    )
+    assert v_1b.status_code == 200
+    assert v_1b.json()["verdict"] == "DOCUMENT_TAMPERED"
+    assert v_1b.json()["doc_sha256_match"] is False
+    assert v_1b.json()["chain_valid"] is True
+
+    # 4. Unggah file yang diubah isinya, lalu coba palsukan doc_sha256 di SQLite -> LEDGER_SPOOFED_TAMPERED
+    san_bytes = (sanitized_dir / "sanitized_surat_dinas_bsre_bersih.pdf").read_bytes()
+    fake_bytes = san_bytes + b"\n% Nilai Anggaran Diubah: Rp 99M\n"
+    v_up_fake = client.post(
+        "/api/ledger/verify-document",
+        files={"file": ("surat_palsu.pdf", fake_bytes, "application/pdf")},
+        data={"sample_mode": "upload", "block_index": "3"},
+    )
+    assert v_up_fake.status_code == 200
+    fake_sha = v_up_fake.json()["file_sha256"]
+    assert v_up_fake.json()["verdict"] == "DOCUMENT_TAMPERED"
+
+    # Hacker menyamakan doc_sha256 di Blok #3 SQLite agar cocok dengan surat_palsu.pdf
+    spoof = client.post(
+        "/api/ledger/attack",
+        json={"attack_type": "edit_field", "block_index": 3, "updates": {"doc_sha256": fake_sha}},
+    )
+    assert spoof.status_code == 200
+    assert spoof.json()["soc_view"]["verification"]["valid"] is False
+
+    v_after_spoof = client.post(
+        "/api/ledger/verify-document",
+        files={"file": ("surat_palsu.pdf", fake_bytes, "application/pdf")},
+        data={"sample_mode": "upload", "block_index": "3"},
+    )
+    assert v_after_spoof.status_code == 200
+    assert v_after_spoof.json()["doc_sha256_match"] is True
+    assert v_after_spoof.json()["chain_valid"] is False
+    assert v_after_spoof.json()["authentic"] is False
+    assert v_after_spoof.json()["verdict"] == "LEDGER_SPOOFED_TAMPERED"
+
+
 def test_vaccine_toggle_export_and_import(isolated_client, tmp_path):
     """5(c) Toggle vaksin (nonaktif tidak memblokir, aktif memblokir) serta export & import bundle."""
     client, _, test_sandbox, _ = isolated_client

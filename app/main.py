@@ -125,6 +125,12 @@ class SandboxExecRequest(BaseModel):
     command: str
 
 
+class LedgerAttackRequest(BaseModel):
+    attack_type: str = "edit_field"
+    block_index: int | None = None
+    updates: Dict[str, str] | None = None
+
+
 class AgentHeartbeatRequest(BaseModel):
     agent_id: str
     agent_name: str = "Kertopati AI Agent"
@@ -323,6 +329,7 @@ def _process_document(
                 "details": inspection.details,
                 "cdr": {
                     "sanitized_filename": cdr_result.sanitized_filename,
+                    "original_sha256": hashlib.sha256(raw_bytes).hexdigest(),
                     "sanitized_sha256": cdr_result.sanitized_sha256,
                     "original_size_bytes": len(raw_bytes),
                     "sanitized_size_bytes": len(cdr_result.sanitized_bytes),
@@ -514,6 +521,7 @@ async def run_multihop_demo():
                 "multihop_blocks": [hop1, hop2, hop3],
                 "cdr": {
                     "sanitized_filename": cdr_result.sanitized_filename,
+                    "original_sha256": hashlib.sha256(raw_bytes).hexdigest(),
                     "sanitized_sha256": cdr_result.sanitized_sha256,
                     "original_size_bytes": len(raw_bytes),
                     "sanitized_size_bytes": len(cdr_result.sanitized_bytes),
@@ -597,6 +605,146 @@ async def download_sanitized_pdf(filename: str):
 @app.get("/api/ledger/verify")
 async def verify_ledger():
     return JSONResponse(ledger.verify_chain())
+
+
+@app.get("/api/ledger/inspect")
+async def inspect_ledger():
+    return JSONResponse(ledger.inspect_blocks())
+
+
+@app.post("/api/ledger/attack")
+async def attack_ledger(payload: LedgerAttackRequest):
+    attack_type = (payload.attack_type or "edit_field").strip().lower()
+    if attack_type == "edit_field":
+        res = ledger.attack_edit_block(block_index=payload.block_index, updates=payload.updates)
+    elif attack_type == "rehash_cascade":
+        res = ledger.attack_rehash_cascade(block_index=payload.block_index, updates=payload.updates)
+    elif attack_type == "truncate_last":
+        res = ledger.attack_truncate_last()
+    else:
+        return JSONResponse({"error": f"Jenis serangan tidak dikenal: {attack_type}"}, status_code=400)
+
+    if "error" in res:
+        return JSONResponse(res, status_code=400)
+
+    return JSONResponse(
+        {
+            "sender_view": {
+                "status": "ALERT",
+                "message": f"Serangan simulasi ({attack_type}) dieksekusi ke block store ledger.",
+            },
+            "soc_view": {
+                "verdict": "TAMPERED",
+                **res,
+            },
+            "inspection": ledger.inspect_blocks(),
+        }
+    )
+
+
+@app.post("/api/ledger/verify-document")
+async def verify_document_against_ledger(
+    file: UploadFile | None = File(default=None),
+    sample_mode: str = Form(default="upload"),
+    block_index: str = Form(default=""),
+    tamper_payload: str = Form(default="Nilai Anggaran Diubah: Rp 99.500.000.000 [OFF-CHAIN TAMPERED]"),
+):
+    parsed_block_idx: int | None = None
+    if block_index.strip():
+        try:
+            parsed_block_idx = int(block_index.strip())
+        except ValueError:
+            return JSONResponse({"error": "block_index harus berupa angka."}, status_code=400)
+
+    mode = (sample_mode or "upload").strip().lower()
+    demo_file = BASE_DIR / "demo_samples" / "surat_dinas_bsre_bersih.pdf"
+
+    checked_filename = "dokumen_uji.pdf"
+    mutation_summary = "Verifikasi dokumen unggahan pengguna."
+    base_sha256: str | None = None
+    size_before: int | None = None
+
+    if file is not None and (file.filename or "") != "" and mode == "upload":
+        raw_bytes = await file.read()
+        if not raw_bytes:
+            return JSONResponse({"error": "File kosong tidak dapat diverifikasi."}, status_code=400)
+        if len(raw_bytes) > MAX_UPLOAD_SIZE_BYTES:
+            return JSONResponse(
+                {"error": "Ukuran file melebihi batas maksimal 10 MB."},
+                status_code=413,
+            )
+        checked_filename = Path(file.filename or "dokumen_unggahan").name
+        check_bytes = raw_bytes
+        base_sha256 = hashlib.sha256(raw_bytes).hexdigest()
+        size_before = len(raw_bytes)
+    else:
+        if not demo_file.exists():
+            return JSONResponse(
+                {"error": "File demo surat_dinas_bsre_bersih.pdf belum tersedia."},
+                status_code=404,
+            )
+        orig_bytes = demo_file.read_bytes()
+        san_path = SANITIZED_DIR / "sanitized_surat_dinas_bsre_bersih.pdf"
+        if san_path.exists():
+            san_bytes = san_path.read_bytes()
+        else:
+            san_bytes = sanitize_pdf_bytes(
+                raw_bytes=orig_bytes,
+                filename=demo_file.name,
+                output_dir=SANITIZED_DIR,
+            ).sanitized_bytes
+
+        use_orig_base = parsed_block_idx == 1
+        base_bytes = orig_bytes if use_orig_base else san_bytes
+        base_name = demo_file.name if use_orig_base else "sanitized_surat_dinas_bsre_bersih.pdf"
+        base_sha256 = hashlib.sha256(base_bytes).hexdigest()
+        size_before = len(base_bytes)
+
+        if mode == "original_clean":
+            check_bytes = orig_bytes
+            checked_filename = demo_file.name
+            base_sha256 = hashlib.sha256(orig_bytes).hexdigest()
+            size_before = len(orig_bytes)
+            mutation_summary = "Tanpa modifikasi — menggunakan byte asli dokumen Kodim 0606."
+        elif mode == "sanitized_cdr":
+            check_bytes = san_bytes
+            checked_filename = "sanitized_surat_dinas_bsre_bersih.pdf"
+            base_sha256 = hashlib.sha256(san_bytes).hexdigest()
+            size_before = len(san_bytes)
+            mutation_summary = "Tanpa modifikasi — menggunakan byte dokumen steril CDR."
+        elif mode == "tamper_1byte":
+            mut = bytearray(base_bytes)
+            # Ubah 1 byte di akhir isi dokumen (atau tepat sebelum %%EOF) agar Avalanche Effect SHA-256 terlihat jelas
+            eof_pos = base_bytes.rfind(b"%%EOF")
+            flip_pos = (eof_pos - 2) if eof_pos > 4 else (len(mut) - 1)
+            old_b = mut[flip_pos]
+            mut[flip_pos] = old_b ^ 0x01 if (old_b ^ 0x01) != old_b else 0x41
+            check_bytes = bytes(mut)
+            checked_filename = f"tampered_1byte_{base_name}"
+            mutation_summary = f"Off-chain 1-byte flip pada offset byte #{flip_pos} (0x{old_b:02x} -> 0x{mut[flip_pos]:02x})."
+        elif mode == "tamper_text":
+            clean_txt = (tamper_payload or "Nilai Anggaran Diubah: Rp 99.500.000.000").strip()[:200]
+            injected_comment = f"\n% [OFF-CHAIN-TAMPER] {clean_txt}\n".encode("utf-8")
+            check_bytes = base_bytes + injected_comment
+            checked_filename = f"tampered_content_{base_name}"
+            mutation_summary = f"Menyisipkan payload teks off-chain ke file PDF: \"{clean_txt}\"."
+        else:
+            return JSONResponse({"error": f"Mode verifikasi dokumen tidak dikenal: {mode}"}, status_code=400)
+
+    res = ledger.verify_document_against_block(check_bytes, block_index=parsed_block_idx)
+    if "error" in res:
+        return JSONResponse(res, status_code=400)
+
+    return JSONResponse(
+        {
+            **res,
+            "sample_mode": mode,
+            "checked_filename": checked_filename,
+            "base_sha256": base_sha256,
+            "size_before": size_before,
+            "mutation_summary": mutation_summary,
+        }
+    )
 
 
 @app.post("/api/sandbox/{sha256_prefix}/review")

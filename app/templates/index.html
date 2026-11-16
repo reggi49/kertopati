@@ -110,6 +110,51 @@
     .chain-arrow { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 9px; border-radius:999px; font-size:11px; font-weight:800; color:#6ee7b7; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.4); white-space:nowrap; }
     .chain-arrow.broken { color:#fca5a5; background:rgba(239,68,68,.18); border:1.5px dashed #ef4444; }
     .chain-tamper-explain { margin-top:10px; padding:9px 12px; border-radius:8px; border:1px solid rgba(239,68,68,.55); background:rgba(239,68,68,.12); color:#fecaca; font-size:12.5px; line-height:1.45; }
+    .chain-node.clickable { cursor:pointer; transition:border-color .15s ease, transform .15s ease, background .15s ease; }
+    .chain-node.clickable:hover { border-color:#60a5fa; transform:translateY(-2px); background:#0f1d38; }
+    .chain-node.ghost-truncated { border:1.5px dashed #ef4444; background:rgba(239,68,68,.1); }
+    .head-seal-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; font-size:11.5px; font-weight:700; border:1px solid var(--border); background:#0b1326; color:#cbd5e1; }
+    .head-seal-pill.ok { border-color:rgba(16,185,129,.45); color:#6ee7b7; background:rgba(16,185,129,.12); }
+    .head-seal-pill.bad { border-color:rgba(239,68,68,.6); color:#fca5a5; background:rgba(239,68,68,.16); }
+
+    /* Tab 2 Ledger Sub-Tabs & Progressive Disclosure Workbench */
+    .ledger-subtabs { display:flex; gap:6px; flex-wrap:wrap; padding:4px; background:#050b18; border:1px solid var(--border); border-radius:10px; margin-bottom:14px; }
+    .ledger-subtab-btn { flex:1; min-width:170px; border:1px solid transparent; background:transparent; color:var(--muted); padding:9px 12px; border-radius:8px; cursor:pointer; font-size:12.5px; font-weight:700; transition:all .18s ease; margin:0; text-align:center; }
+    .ledger-subtab-btn:hover { color:#e2e8f0; background:rgba(148,163,184,.08); }
+    .ledger-subtab-btn.active { background:rgba(59,130,246,.2); color:#93c5fd; border-color:rgba(59,130,246,.55); }
+    .ledger-subtab-btn.active.mode-doc { background:rgba(16,185,129,.16); color:#6ee7b7; border-color:rgba(16,185,129,.45); }
+    .ledger-subtab-btn.active.mode-hack { background:rgba(245,158,11,.18); color:#fde68a; border-color:rgba(245,158,11,.5); }
+    .ledger-subpanel { display:none; }
+    .ledger-subpanel.active { display:block; }
+
+    /* Interactive Hacker Ledger Console & Cryptographic X-Ray */
+    .hacker-lab-grid { display:grid; grid-template-columns:1.15fr 1fr; gap:14px; align-items:stretch; }
+    @media (max-width:920px) { .hacker-lab-grid { grid-template-columns:1fr; } }
+    .hacker-panel-left { background:#081022; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+    .attack-mode-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .attack-pill { border:1px solid var(--border); background:#0b152a; color:#cbd5e1; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:11.5px; font-weight:700; transition:all .15s; margin:0; }
+    .attack-pill:hover { border-color:#60a5fa; }
+    .attack-pill.active { border-color:#f59e0b; background:rgba(245,158,11,.18); color:#fde68a; }
+    .attack-pill.danger-mode.active { border-color:#ef4444; background:rgba(239,68,68,.2); color:#fca5a5; }
+    .hacker-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    @media (max-width:640px) { .hacker-field-grid { grid-template-columns:1fr; } }
+    .hacker-field-grid label, .hacker-target-row label { display:block; font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px; }
+    .hacker-field-grid input, .hacker-target-row select { margin:0; padding:7px 9px; font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:#020617; }
+    .sql-preview { background:#020617; border:1px dashed rgba(245,158,11,.45); border-radius:8px; padding:8px 10px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; color:#fcd34d; overflow-wrap:anywhere; line-height:1.45; }
+    .avalanche-box { background:#030816; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; line-height:1.45; overflow-wrap:anywhere; }
+    .hacker-term { background:#020617; border:1px solid rgba(245,158,11,.35); border-radius:10px; padding:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; color:#cbd5e1; white-space:pre-wrap; overflow-y:auto; min-height:260px; max-height:380px; line-height:1.52; }
+    .hash-mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; overflow-wrap:anywhere; }
+    .cdr-diff-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:4px; }
+    @media (max-width:700px) { .cdr-diff-grid { grid-template-columns:1fr; } }
+    .cdr-diff-box { background:#030816; border:1px solid rgba(16,185,129,.3); border-radius:8px; padding:7px 9px; font-size:11.5px; }
+    .doc-verify-controls { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; }
+    @media (max-width:860px) { .doc-verify-controls { grid-template-columns:1fr; } }
+    .doc-verify-pane { background:#0a1326; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+    .doc-verify-pane label { display:block; font-size:11.5px; font-weight:700; color:#93c5fd; margin-bottom:3px; }
+    .doc-verify-pane input, .doc-verify-pane select { margin:0; padding:7px 9px; font-size:12px; background:#020617; }
+    .doc-verify-result { border-radius:10px; padding:12px; border:1px solid var(--border); background:#030816; font-size:12.5px; line-height:1.5; }
+    .doc-verify-result.ok { border-color:rgba(16,185,129,.55); background:rgba(16,185,129,.09); }
+    .doc-verify-result.bad { border-color:rgba(239,68,68,.65); background:rgba(239,68,68,.11); }
 
     /* Incident & Vaccine Cards */
     .item-card { border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; background:#0b1222; }
@@ -380,23 +425,42 @@
       <div class="sub">Audit Multi-Format &amp; /ByteRange BSrE • SHA-256 Chain of Custody (Kodim → Korem → Pusat) • CDR Sanitizer • Stealth Auto-Sandbox &amp; HITL</div>
     </div>
     <div class="header-actions" style="margin-left:auto;">
-      <button type="button" class="btn-reset-prominent" onclick="resetDemoData()">↺ Reset Demo Data</button>
+      <button type="button" class="btn-reset-prominent" onclick="resetDemoData()">Reset Demo Data</button>
     </div>
   </header>
 
   <!-- Navigasi 3 Tab Berdampingan -->
   <div class="nav-tabs">
     <button id="tabBtn1" type="button" class="tab-btn active" onclick="switchMainTab(1)">
-      ⚔️ Simulasi Cyber Attack (Docker Live)
+      Simulasi Cyber Attack (Docker Live)
     </button>
     <button id="tabBtn2" type="button" class="tab-btn" onclick="switchMainTab(2)">
-      <span>⛓ Audit Ledger Blockchain &amp; CDR</span>
+      <span>Audit Ledger Blockchain &amp; CDR</span>
       <span id="tab2CountBadge" class="tab-count">{{ blocks|length }}</span>
     </button>
     <button id="tabBtn3" type="button" class="tab-btn" onclick="switchMainTab(3)">
-      <span>🧬 Sandbox HITL &amp; Vaksin YARA AI</span>
+      <span>Sandbox HITL &amp; Vaksin YARA AI</span>
       <span id="tab3CountBadge" class="tab-count">{{ sandbox_events|length + vaccines|length }}</span>
     </button>
+  </div>
+
+  <!-- Floating Coachmark Tooltip (Popover Manual Non-Blocking untuk Tab 1 & Tab 2) -->
+  <div id="coachTooltip" popover="manual" role="dialog" aria-labelledby="coachTitle" data-side="left">
+    <div class="coach-bubble">
+      <div class="coach-top">
+        <span id="coachBadge" class="coach-badge">LANGKAH 1/5</span>
+        <button id="btnCloseCoach" type="button" class="coach-close" aria-label="Tutup tooltip sementara" onclick="dismissCoachTooltipTemporarily()">×</button>
+      </div>
+      <h3 id="coachTitle" class="coach-title">Pilih Skenario &amp; Mulai Misi</h3>
+      <p id="coachDesc" class="coach-desc">Pilih CVE di blok tersorot atas, lalu klik tombol hijau ini.</p>
+      <div class="coach-foot">
+        <div id="coachDots" class="coach-dots" aria-hidden="true"></div>
+        <div class="coach-foot-actions">
+          <button id="btnMuteCoach" type="button" class="coach-mute" onclick="toggleGuideMode()">Nonaktifkan</button>
+          <button id="btnNextCoach" type="button" class="coach-next" style="display:none;" onclick="advancePrepCoach()">Lanjut →</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 1: Simulasi Cyber Attack (Red vs Blue) + 5-Step Mission Stepper -->
@@ -408,7 +472,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <span id="flowStatusBadge" class="badge warn">MENUNGGU DOKUMEN</span>
           <span id="simServerStatusBadge" class="badge warn">SIAP SIMULASI CVE</span>
-          <button id="btnToggleGuide" type="button" class="btn btn-amber btn-sm" style="margin:0;padding:3px 9px;font-size:11px;" onclick="toggleGuideMode()">💡 Tooltip: ON</button>
+          <button id="btnToggleGuide" type="button" class="btn btn-amber btn-sm" style="margin:0;padding:3px 9px;font-size:11px;" onclick="toggleGuideMode()">Panduan Tooltip: ON</button>
         </div>
       </h2>
 
@@ -440,25 +504,6 @@
       <div class="flow-ticker">
         <span id="flowTickerText">Tahap 1 dimulai saat Anda mengirim skenario CVE atau mengunggah dokumen di bawah.</span>
         <span id="flowPctText" style="font-weight:700;color:var(--muted);">0%</span>
-      </div>
-    </div>
-
-    <!-- Floating Coachmark Tooltip (Popover Manual Non-Blocking dengan Panah Terarah) -->
-    <div id="coachTooltip" popover="manual" role="dialog" aria-labelledby="coachTitle" data-side="left">
-      <div class="coach-bubble">
-        <div class="coach-top">
-          <span id="coachBadge" class="coach-badge">LANGKAH 1/5</span>
-          <button id="btnCloseCoach" type="button" class="coach-close" aria-label="Tutup tooltip sementara" onclick="dismissCoachTooltipTemporarily()">×</button>
-        </div>
-        <h3 id="coachTitle" class="coach-title">Pilih Skenario &amp; Mulai Misi</h3>
-        <p id="coachDesc" class="coach-desc">Pilih CVE di blok tersorot atas, lalu klik tombol hijau ini.</p>
-        <div class="coach-foot">
-          <div id="coachDots" class="coach-dots" aria-hidden="true"></div>
-          <div class="coach-foot-actions">
-            <button id="btnMuteCoach" type="button" class="coach-mute" onclick="toggleGuideMode()">Nonaktifkan</button>
-            <button id="btnNextCoach" type="button" class="coach-next" style="display:none;" onclick="advancePrepCoach()">Lanjut →</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -554,56 +599,180 @@
     </div>
   </div>
 
-  <!-- TAB 2: Audit Ledger Blockchain & CDR -->
+  <!-- TAB 2: Audit Ledger Blockchain & CDR (2 Kartu Fokus + 3 Sub-Tab Mode) -->
   <div id="tabPanel2" class="tab-panel">
-    <div class="card" style="margin-bottom:16px;">
-      <h2>Panduan Uji Ledger Blockchain &amp; Sanitasi Dokumen (CDR)</h2>
+    <div id="tab2WorkbenchCard" class="card" style="margin-bottom:16px;">
+      <h2>
+        <span>Panduan Uji Ledger Blockchain &amp; Sanitasi Dokumen (CDR)</span>
+        <button id="btnToggleGuideTab2" type="button" class="btn btn-amber btn-sm" style="margin:0;padding:3px 9px;font-size:11px;" onclick="toggleGuideMode()">Panduan Tooltip: ON</button>
+      </h2>
+
       <div class="tab2-status-bar">
-        <span id="chainIntegrityBadge" class="chain-status-pill {{ 'ok' if ledger_verification.valid else 'bad' }}">
-          {% if ledger_verification.valid %}
-            CHAIN INTEGRITY: VERIFIED
-          {% else %}
-            CHAIN INTEGRITY: TAMPERED — BLOK #{{ ledger_verification.tampered_blocks[0].block_index if ledger_verification.tampered_blocks else '?' }} RUSAK
-          {% endif %}
-        </span>
-        <button type="button" class="btn btn-amber" style="margin:0;" onclick="verifyLedgerNow()">Verifikasi Ulang Rantai</button>
-      </div>
-
-      <div class="tab2-steps-grid">
-        <article class="step-guide-card">
-          <header>
-            <span class="badge ok">LANGKAH 1</span>
-            <h3>Kirim Rantai Bersih &amp; CDR Steril</h3>
-          </header>
-          <p>Mengirim surat dinas bersih berjenjang (<strong>Kodim 0606 → Korem 061 → PUSSIBERAD Pusat</strong>), mensterilkan dokumen lewat Content Disarm &amp; Reconstruction (CDR), lalu mencatat 3 blok hash SHA-256 ke Ledger.</p>
-          <footer>
-            <button type="button" id="btnTab2Multihop" class="btn btn-green" style="margin:0;" onclick="runMultiHop()">1. Kirim Rantai Dokumen Bersih (Kodim -&gt; Korem -&gt; Pusat + CDR)</button>
-          </footer>
-        </article>
-
-        <article class="step-guide-card">
-          <header>
-            <span class="badge warn">LANGKAH 2</span>
-            <h3>Uji Manipulasi Data di Korem</h3>
-          </header>
-          <p>Menyimulasikan perubahan paksa pada baris Ledger di <strong>Korem 061</strong> untuk membuktikan deteksi anti-tamper. Jika ledger masih 0 blok, sistem otomatis menjalankan Langkah 1 dulu sebelum menguji manipulasi.</p>
-          <footer>
-            <button type="button" id="btnTab2Tamper" class="btn btn-amber" style="margin:0;" onclick="runTamper()">2. Uji Manipulasi Data di Korem (Tamper Test)</button>
-          </footer>
-        </article>
-      </div>
-
-      <div id="cdrDownloadBar" class="cdr-bar">
-        <div style="font-size:12.5px;">
-          <strong>CDR Selesai:</strong> <span id="cdrSummaryText">Dokumen telah direkonstruksi ulang (steril).</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="chainIntegrityBadge" class="chain-status-pill {{ 'ok' if ledger_verification.valid else 'bad' }}">
+            {% if ledger_verification.valid %}
+              CHAIN INTEGRITY: VERIFIED
+            {% else %}
+              CHAIN INTEGRITY: TAMPERED — BLOK #{{ ledger_verification.tampered_blocks[0].block_index if ledger_verification.tampered_blocks else '?' }} RUSAK
+            {% endif %}
+          </span>
+          <span id="headSealBadge" class="head-seal-pill ok">Segel Kepala HMAC: Memuat...</span>
         </div>
-        <a id="downloadSanitizedBtn" class="btn btn-green" style="margin:0;" href="#" download>Unduh PDF Steril CDR</a>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-amber btn-sm" style="margin:0;" onclick="verifyLedgerNow()">Verifikasi Ulang</button>
+          <button id="btnRecoverLedgerTop" type="button" class="btn btn-green btn-sm" style="margin:0;" onclick="recoverCleanChain()">Pulihkan Rantai Bersih</button>
+        </div>
+      </div>
+
+      <div class="ledger-subtabs" role="tablist" aria-label="Mode Audit Ledger">
+        <button type="button" id="ledgerSubBtnQuick" class="ledger-subtab-btn active" onclick="switchLedgerSubTab('quick')">Prosedur Standar (2 Tahap)</button>
+        <button type="button" id="ledgerSubBtnDoc" class="ledger-subtab-btn mode-doc" onclick="switchLedgerSubTab('doc')">Verifikasi Integritas Berkas</button>
+        <button type="button" id="ledgerSubBtnHacker" class="ledger-subtab-btn mode-hack" onclick="switchLedgerSubTab('hacker')">Lab Anti-Tamper &amp; Kriptografi</button>
+      </div>
+
+      <!-- Sub-Tab 1 (Default): Prosedur Standar 2 Tahap -->
+      <div id="ledgerSubQuick" class="ledger-subpanel active">
+        <div class="tab2-steps-grid">
+          <article id="tab2Step1Card" class="step-guide-card">
+            <header>
+              <span class="badge ok">TAHAP 1</span>
+              <h3>Kirim Rantai Bersih &amp; CDR Steril</h3>
+            </header>
+            <p>Mengirim surat dinas bersih berjenjang (<strong>Kodim 0606 → Korem 061 → PUSSIBERAD Pusat</strong>), mensterilkan dokumen lewat Content Disarm &amp; Reconstruction (CDR), lalu mencatat 3 blok hash HMAC-SHA256 ke Ledger.</p>
+            <footer>
+              <button type="button" id="btnTab2Multihop" class="btn btn-green" style="margin:0;" onclick="runMultiHop()">1. Kirim Rantai Dokumen Bersih (Kodim -&gt; Korem -&gt; Pusat + CDR)</button>
+            </footer>
+          </article>
+
+          <article id="tab2Step2Card" class="step-guide-card">
+            <header>
+              <span class="badge warn">TAHAP 2</span>
+              <h3>Simulasi Manipulasi Data di Korem</h3>
+            </header>
+            <p>Menyimulasikan perubahan paksa pada blok Ledger di <strong>Korem 061</strong> untuk membuktikan deteksi anti-tamper. Untuk menguji perubahan isi berkas atau skenario <em>Re-Hash</em>, gunakan sub-tab di atas.</p>
+            <footer>
+              <button type="button" id="btnTab2Tamper" class="btn btn-amber" style="margin:0;" onclick="runTamper()">2. Uji Manipulasi Data di Korem (Tamper Test)</button>
+            </footer>
+          </article>
+        </div>
+
+        <div id="cdrDownloadBar" class="cdr-bar">
+          <div style="font-size:12.5px;flex:1;min-width:240px;">
+            <strong>CDR Selesai:</strong> <span id="cdrSummaryText">Dokumen telah direkonstruksi ulang (steril).</span>
+            <div id="cdrDiffDetails" class="cdr-diff-grid" style="display:none;"></div>
+          </div>
+          <a id="downloadSanitizedBtn" class="btn btn-green" style="margin:0;" href="#" download>Unduh PDF Steril CDR</a>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 2: Verifikasi Integritas Berkas (Off-Chain) -->
+      <div id="ledgerSubDoc" class="ledger-subpanel">
+        <div class="doc-verify-controls">
+          <div class="doc-verify-pane">
+            <div>
+              <label for="docVerifyBlockSelect">Blok Pembanding di Ledger:</label>
+              <select id="docVerifyBlockSelect"></select>
+            </div>
+            <div>
+              <label for="docTamperPayloadInput">Payload Uji Perubahan Isi Dokumen (Off-Chain):</label>
+              <input type="text" id="docTamperPayloadInput" value="Nilai Anggaran Diubah: Rp 99.500.000.000" placeholder="Masukkan teks perubahan isi dokumen..." />
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;">
+              <button type="button" class="btn btn-green btn-sm" style="margin:0;" onclick="runDocVerify('auto_clean')">Verifikasi Dokumen Asli / Steril</button>
+              <button id="btnDocTamper1Byte" type="button" class="btn btn-amber btn-sm" style="margin:0;" onclick="runDocVerify('tamper_1byte')">Uji Perubahan 1 Byte</button>
+              <button type="button" class="btn btn-red btn-sm" style="margin:0;" onclick="runDocVerify('tamper_text')">Uji Penyisipan Payload</button>
+            </div>
+          </div>
+
+          <div class="doc-verify-pane">
+            <div>
+              <label for="docVerifyFileInput">Atau Unggah Berkas Sendiri (PDF / DOCX / JPG):</label>
+              <input type="file" id="docVerifyFileInput" />
+            </div>
+            <div style="font-size:11.5px;color:#cbd5e1;line-height:1.45;">
+              Unduh PDF steril dari tab <strong>Prosedur Standar</strong>, ubah 1 karakter saja pada berkas, lalu unggah kembali di sini untuk membuktikan <code>doc_sha256</code> langsung menolak berkas yang telah berubah.
+            </div>
+            <div style="margin-top:auto;">
+              <button type="button" class="btn btn-blue btn-sm" style="margin:0;" onclick="runDocFileVerify()">Verifikasi Berkas Unggahan</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="docVerifyResultBox" class="doc-verify-result">
+          <div style="color:#94a3b8;">Pilih blok target lalu klik <strong>Verifikasi Dokumen Asli / Steril</strong> atau uji modifikasi berkas (<strong>Uji Perubahan 1 Byte</strong> / <strong>Uji Penyisipan Payload</strong>) untuk mencocokkan <code>SHA-256(file)</code> terhadap Ledger.</div>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 3: Lab Anti-Tamper & Kriptografi Nyata (On-Chain / Block Store) -->
+      <div id="ledgerSubHacker" class="ledger-subpanel">
+        <div id="hackerLabBody" class="hacker-lab-grid">
+          <div class="hacker-panel-left">
+            <div>
+              <div style="font-size:11px;font-weight:800;color:#fcd34d;margin-bottom:5px;letter-spacing:.3px;">PILIH SKENARIO UJI ANTI-TAMPER LEDGER:</div>
+              <div class="attack-mode-tabs">
+                <button type="button" class="attack-pill active" data-attack-mode="edit_field" onclick="setHackerAttackMode('edit_field')">1. Modifikasi Atribut Blok</button>
+                <button type="button" class="attack-pill" data-attack-mode="rehash_cascade" onclick="setHackerAttackMode('rehash_cascade')">2. Re-Hash Berantai (Tanpa HMAC)</button>
+                <button type="button" class="attack-pill danger-mode" data-attack-mode="truncate_last" onclick="setHackerAttackMode('truncate_last')">3. Penghapusan Blok Akhir</button>
+              </div>
+              <div id="attackModeDesc" style="font-size:11.5px;color:#cbd5e1;line-height:1.4;margin-top:6px;">Mengubah payload blok secara off-protocol tanpa memperbarui tanda tangan HMAC, membuktikan sidik jari blok langsung bentrok.</div>
+            </div>
+
+            <div class="hacker-target-row">
+              <label for="hackerTargetBlockSelect">Blok Target di Ledger:</label>
+              <select id="hackerTargetBlockSelect" onchange="onHackerBlockSelectChange()"></select>
+            </div>
+
+            <div id="hackerEditableFieldsWrap" class="hacker-field-grid">
+              <div>
+                <label for="hackVerdictInput">Field <code>verdict</code> (Ubah Keputusan):</label>
+                <input type="text" id="hackVerdictInput" oninput="updateHackerLivePreview()" placeholder="mis. CLEAN -> Lolos Pusat" />
+              </div>
+              <div>
+                <label for="hackTargetUnitInput">Field <code>target_unit</code> (Alihkan Tujuan):</label>
+                <input type="text" id="hackTargetUnitInput" oninput="updateHackerLivePreview()" placeholder="mis. Server Eksternal Tidak Sah" />
+              </div>
+              <div style="grid-column:1 / -1;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:200px;">
+                  <label for="hackFilenameInput">Field <code>filename</code> (Ubah Nama Berkas):</label>
+                  <input type="text" id="hackFilenameInput" oninput="updateHackerLivePreview()" placeholder="surat_dinas_anomali.pdf" />
+                </div>
+                <button type="button" class="btn btn-amber btn-sm" style="margin:0 0 2px 0;" onclick="applyHackerPreset()">Muat Contoh Payload Anomali</button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:3px;">Pratinjau Mutasi Payload Blok (Before -&gt; After):</div>
+              <div id="hackerSqlPreview" class="sql-preview">-- Menunggu pilihan blok target...</div>
+            </div>
+
+            <div id="avalanchePreviewBox" class="avalanche-box">
+              <div style="color:#93c5fd;font-weight:700;margin-bottom:2px;">Live Avalanche Effect (Web Crypto SHA-256 Preview):</div>
+              <div style="color:#94a3b8;">Pilih atau ubah field blok di atas untuk melihat perubahan hash 64-karakter secara real-time.</div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:4px;">
+              <button type="button" id="btnExecHackerAttack" class="btn btn-red" style="margin:0;flex:1;" onclick="executeHackerAttack()">Jalankan Uji Manipulasi</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;">
+            <div style="font-size:11px;font-weight:800;color:#93c5fd;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+              <span>LOG MUTASI BLOCK STORE &amp; RESPON VERIFIER KRIPTOGRAFI</span>
+              <span style="color:#64748b;">real-time ledger + hmac</span>
+            </div>
+            <div id="hackerConsoleOutput" class="hacker-term">Simulator Manipulasi Block Store siap.
+1) Jika ledger masih kosong, klik "Jalankan Uji Manipulasi" untuk otomatis mengirim 3 blok bersih lalu menguji manipulasi.
+2) Coba "2. Re-Hash Berantai (Tanpa HMAC)" untuk membuktikan perhitungan ulang SHA-256 tanpa kunci HMAC server tetap ditolak verifier.
+3) Coba "3. Penghapusan Blok Akhir" untuk membuktikan Signed Head Checkpoint menangkap penghapusan blok ekor.</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
+    <div id="tab2ChainCard" class="card">
       <h2>
         <span>Visualisasi Rantai Kustodi &amp; Riwayat Ledger (Kodim → Korem → Pusat)</span>
+        <span style="font-size:12px;font-weight:500;color:var(--muted);">Pilih blok untuk inspeksi payload kanonik dan hash 64-hex</span>
       </h2>
       <div id="chainVisualWrap" class="chain-visual-wrap">
         <div class="sub">Memuat visualisasi 3 blok terbaru...</div>
@@ -627,11 +796,12 @@
               <span>→</span>
               <span class="hash-badge">Kunci Blok Ini: {{ b.block_hash[:8] }}</span>
             </div>
-            {% if 'AUTO-SANDBOX' in (b.verdict or '') or 'SANDBOX' in (b.verdict or '') %}
-            <div>
-              <button type="button" class="btn btn-amber btn-sm" style="margin:8px 0 0 0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+              <button type="button" class="btn btn-blue btn-sm" style="margin:0;" data-action="inspect-block" data-block="{{ b.block_index }}">Inspeksi Kriptografi Blok</button>
+              {% if 'AUTO-SANDBOX' in (b.verdict or '') or 'SANDBOX' in (b.verdict or '') %}
+              <button type="button" class="btn btn-amber btn-sm" style="margin:0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button>
+              {% endif %}
             </div>
-            {% endif %}
           </div>
         </div>
         {% else %}
@@ -793,10 +963,29 @@
   <div id="chronologyDialogBody" class="report-dlg-body"></div>
 </dialog>
 
+<!-- Native Modal <dialog>: Bedah Kriptografi Blok Ledger (64-Char Hash & Canonical JSON) -->
+<dialog id="ledgerInspectDialog" class="report-dialog" closedby="any" aria-labelledby="ledgerInspectTitle">
+  <div class="report-dlg-head">
+    <div>
+      <h2 id="ledgerInspectTitle" style="margin:0;font-size:16px;">Inspeksi Kriptografi Blok Ledger (HMAC-SHA256 + Head Seal)</h2>
+      <div id="ledgerInspectSubtitle" style="font-size:12px;color:var(--muted);margin-top:2px;">Memuat payload &amp; hash 64-hex...</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button type="button" id="btnJumpToHackerLab" class="btn btn-amber btn-sm" style="margin:0;">Uji Manipulasi Blok Ini</button>
+      <form method="dialog" style="margin:0;">
+        <button type="submit" value="close" class="btn btn-green btn-sm" style="margin:0;" autofocus>Tutup</button>
+      </form>
+    </div>
+  </div>
+  <div id="ledgerInspectBody" class="report-dlg-body"></div>
+</dialog>
+
 <script>
 const KERTOPATI_API_TOKEN = {{ (api_token or '') | tojson }};
 let lastMissionReport = null;
 let latestLedgerBlocks = [];
+let latestLedgerInspection = null;
+let currentHackerAttackMode = 'edit_field';
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -829,6 +1018,12 @@ document.addEventListener('click', (e) => {
     const t = Number(btn.getAttribute('data-tab') || 3);
     switchMainTab(t);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (action === 'inspect-block') {
+    const bIdx = Number(btn.getAttribute('data-block') || 0);
+    if (bIdx > 0) openLedgerInspectDialog(bIdx);
+  } else if (action === 'hack-block') {
+    const bIdx = Number(btn.getAttribute('data-block') || 0);
+    if (bIdx > 0) jumpToHackerLabBlock(bIdx);
   }
 });
 
@@ -885,7 +1080,18 @@ async function runDemo(type) {
 async function runMultiHop() {
   await runMenuAction(async () => {
     const res = await fetch('/api/demo/multihop', { method: 'POST' });
-    return res.json();
+    const data = await res.json();
+    if (res.ok) tab2MultihopDone = true;
+    const out = document.getElementById('hackerConsoleOutput');
+    const cdr = (data.soc_view && data.soc_view.cdr) || {};
+    if (out && res.ok) {
+      out.textContent =
+        `$ kertopati-gateway send-multihop --route="Kodim 0606 -> Korem 061 -> PUSSIBERAD Pusat" --cdr\n` +
+        `[CDR] Rekonstruksi steril selesai: ${cdr.original_size_bytes ?? '-'} B -> ${cdr.sanitized_size_bytes ?? '-'} B\n` +
+        `[LEDGER] 3 Blok HMAC-SHA256 dicatat ke Block Store & Signed Head Seal diperbarui.\n` +
+        `[VERIFIER] CHAIN INTEGRITY: VERIFIED`;
+    }
+    return data;
   });
 }
 
@@ -898,11 +1104,41 @@ async function runTamper() {
       renderMenuCdrBar(seedData.soc_view);
     }
     const res = await fetch('/api/demo/tamper', { method: 'POST' });
-    return res.json();
+    const data = await res.json();
+    const out = document.getElementById('hackerConsoleOutput');
+    const soc = data.soc_view || {};
+    if (out && res.ok) {
+      out.textContent =
+        `[BLOCK-STORE] Mutasi paksa pada Blok #${soc.tampered_block_index} (Korem 061) tanpa memperbarui tanda tangan HMAC:\n` +
+        ` ├─ verdict (Sebelum) : ${soc.original_verdict || '-'}\n` +
+        ` └─ verdict (Sesudah) : ${soc.tampered_verdict || '-'}\n\n` +
+        `$ kertopati-ledger verify --strict-hmac --check-head-seal\n` +
+        `[ALERT] CHAIN INTEGRITY: TAMPERED — BLOK #${soc.tampered_block_index} RUSAK!\n` +
+        ` └─ Sidik jari HMAC-SHA256 tidak cocok dengan payload blok yang dimodifikasi.`;
+    }
+    return data;
   });
 }
 
 let currentMainTab = 1;
+let currentLedgerSubTab = 'quick';
+let tab2MultihopDone = false;
+let lastTab2GuideKey = 'tab2_step1';
+function applyLedgerSubTabDom(mode) {
+  currentLedgerSubTab = mode;
+  const map = {
+    quick: { panel: 'ledgerSubQuick', btn: 'ledgerSubBtnQuick' },
+    doc: { panel: 'ledgerSubDoc', btn: 'ledgerSubBtnDoc' },
+    hacker: { panel: 'ledgerSubHacker', btn: 'ledgerSubBtnHacker' }
+  };
+  Object.entries(map).forEach(([k, ids]) => {
+    const p = document.getElementById(ids.panel);
+    const b = document.getElementById(ids.btn);
+    if (p) p.classList.toggle('active', k === mode);
+    if (b) b.classList.toggle('active', k === mode);
+  });
+}
+
 function switchMainTab(tabIdx) {
   currentMainTab = tabIdx;
   [1, 2, 3].forEach(i => {
@@ -912,7 +1148,15 @@ function switchMainTab(tabIdx) {
     if (btn) btn.classList.toggle('active', i === tabIdx);
   });
   if (typeof updateMissionGuide === 'function') {
-    updateMissionGuide(lastGuideStageKey);
+    if (tabIdx === 2) {
+      tab2MultihopDone = false;
+      applyLedgerSubTabDom('quick');
+      guideDismissedForStage = false;
+      updateMissionGuide('tab2_step1');
+    } else {
+      guideDismissedForStage = false;
+      updateMissionGuide(lastGuideStageKey);
+    }
   }
 }
 
@@ -924,6 +1168,8 @@ async function resetDemoData() {
   const data = await res.json();
   activeInv = null;
   lastMissionReport = null;
+  tab2MultihopDone = false;
+  lastTab2GuideKey = 'tab2_step1';
   document.getElementById('sandboxShellBar').style.display = 'none';
   document.getElementById('sandboxMetaStrip').style.display = 'none';
   resetTerminalChrome();
@@ -1005,6 +1251,7 @@ function resetFlowDiagram() {
 
 function renderMenuCdrBar(soc) {
   const cdrBar = document.getElementById('cdrDownloadBar');
+  const diffDetails = document.getElementById('cdrDiffDetails');
   if (!cdrBar) return;
   if (soc && soc.verdict === 'CLEAN' && soc.cdr && soc.cdr.download_url) {
     const btn = document.getElementById('downloadSanitizedBtn');
@@ -1020,9 +1267,25 @@ function renderMenuCdrBar(soc) {
       : 'Dokumen telah direkonstruksi ulang (steril)';
     const stripped = soc.cdr.stripped_elements || 'Metadata & struktur diverifikasi steril';
     summary.textContent = `${soc.cdr.sanitized_filename} | ${diffLabel} | Dibersihkan: ${stripped}`;
+    if (diffDetails) {
+      const origSha = soc.cdr.original_sha256 ? soc.cdr.original_sha256 : '-';
+      const sanSha = soc.cdr.sanitized_sha256 ? soc.cdr.sanitized_sha256 : '-';
+      diffDetails.innerHTML = `
+        <div class="cdr-diff-box">
+          <div style="color:#94a3b8;font-weight:700;margin-bottom:2px;">Dokumen Asli (Kodim) • ${hasSizes ? origSize + ' B' : '-'}</div>
+          <div class="hash-mono" style="color:#cbd5e1;">SHA-256: ${escapeHtml(origSha)}</div>
+        </div>
+        <div class="cdr-diff-box">
+          <div style="color:#6ee7b7;font-weight:700;margin-bottom:2px;">Hasil Rekonstruksi CDR Steril • ${hasSizes ? sanSize + ' B' : '-'}</div>
+          <div class="hash-mono" style="color:#a7f3d0;">SHA-256: ${escapeHtml(sanSha)}</div>
+        </div>
+      `;
+      diffDetails.style.display = 'grid';
+    }
     cdrBar.style.display = 'flex';
   } else if (soc && soc.verdict !== 'TAMPERED') {
     cdrBar.style.display = 'none';
+    if (diffDetails) diffDetails.style.display = 'none';
   }
 }
 
@@ -1148,13 +1411,26 @@ function hashBadgeStyle(hexStr, isBroken) {
 function renderChainVisualStrip(blocks, verification) {
   const wrap = document.getElementById('chainVisualWrap');
   if (!wrap) return;
+  const tamperedList = (verification && verification.tampered_blocks) || [];
+  const truncEntry = tamperedList.find(tb => tb.filename === 'CHAIN_TRUNCATION' || tb.filename === 'LEDGER_HEAD_SEAL');
+
   if (!blocks || !blocks.length) {
+    if (truncEntry) {
+      wrap.innerHTML = `<div class="chain-visual-strip">
+        <article class="chain-node ghost-truncated">
+          <div class="chain-node-head"><span>Blok Hilang</span><span class="badge bad">TRUNCATED</span></div>
+          <div class="chain-node-unit">Seluruh / Ekor Blok Hilang</div>
+          <div class="chain-node-hash">Block Store kosong, tetapi Head Seal masih mencatat riwayat.</div>
+        </article>
+      </div>
+      <div class="chain-tamper-explain"><strong>Penjelasan Singkat:</strong> ${escapeHtml((truncEntry.reasons || []).join('; '))}</div>`;
+      return;
+    }
     wrap.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Belum ada rantai aktif. Klik <strong>1. Kirim Rantai Dokumen Bersih</strong> di atas untuk melihat 3 blok (Kodim 0606 → Korem 061 → PUSSIBERAD Pusat).</div>';
     return;
   }
 
-  const tamperedList = (verification && verification.tampered_blocks) || [];
-  const tamperedSet = new Set(tamperedList.map(tb => tb.block_index));
+  const tamperedSet = new Set(tamperedList.filter(tb => tb.filename !== 'CHAIN_TRUNCATION' && tb.filename !== 'LEDGER_HEAD_SEAL').map(tb => tb.block_index));
   const recent3 = blocks.slice(0, 3).slice().reverse();
 
   const htmlParts = [];
@@ -1164,13 +1440,14 @@ function renderChainVisualStrip(blocks, verification) {
     const block8 = (b.block_hash || '').slice(0, 8);
     const unitLabel = b.source_unit || `Blok #${b.block_index}`;
     htmlParts.push(`
-      <article class="chain-node ${isBroken ? 'tampered' : ''}">
+      <article class="chain-node clickable ${isBroken ? 'tampered' : ''}" data-action="inspect-block" data-block="${escapeHtml(b.block_index)}" title="Pilih untuk inspeksi 64-hex & Canonical JSON">
         <div class="chain-node-head">
-          <span>🔒 Blok #${escapeHtml(b.block_index)}</span>
+          <span>Blok #${escapeHtml(b.block_index)}</span>
           <span class="badge ${isBroken ? 'bad' : 'ok'}">${isBroken ? 'RUSAK' : 'UTUH'}</span>
         </div>
         <div class="chain-node-unit">${escapeHtml(unitLabel)}</div>
         <div class="chain-node-hash">Prev: ${escapeHtml(prev8)} → Hash: ${escapeHtml(block8)}</div>
+        <div style="margin-top:5px;font-size:10.5px;color:#93c5fd;">Inspeksi 64-Hex &amp; Payload →</div>
       </article>
     `);
 
@@ -1179,45 +1456,592 @@ function renderChainVisualStrip(blocks, verification) {
       const arrowBroken = isBroken || tamperedSet.has(nextB.block_index);
       htmlParts.push(
         arrowBroken
-          ? `<div class="chain-arrow broken">🔓 RANTAI PUTUS: DATA DIUBAH</div>`
-          : `<div class="chain-arrow">🔒 Terhubung SHA-256 →</div>`
+          ? `<div class="chain-arrow broken">RANTAI PUTUS: DATA DIUBAH</div>`
+          : `<div class="chain-arrow">Terhubung HMAC →</div>`
       );
     }
   });
 
+  if (truncEntry && truncEntry.filename === 'CHAIN_TRUNCATION') {
+    htmlParts.push(`<div class="chain-arrow broken">SEGEL KEPALA: BLOK HILANG</div>`);
+    htmlParts.push(`
+      <article class="chain-node ghost-truncated">
+        <div class="chain-node-head"><span>Blok #${escapeHtml(truncEntry.block_index)}</span><span class="badge bad">DIHAPUS</span></div>
+        <div class="chain-node-unit">Truncation Attack Terdeteksi</div>
+        <div class="chain-node-hash">Head Seal mendeteksi blok ekor dihapus dari Block Store.</div>
+      </article>
+    `);
+  }
+
   let explainHtml = '';
   if (verification && !verification.valid && tamperedList.length) {
     const tb = tamperedList[0];
-    explainHtml = `<div class="chain-tamper-explain"><strong>Penjelasan Singkat:</strong> Data pada <strong>Blok #${escapeHtml(tb.block_index)}</strong> telah diubah secara tidak sah di database sehingga sidik jari kriptografi SHA-256 tidak lagi cocok dengan rantai kunci blok sebelum maupun sesudahnya.</div>`;
+    const reasonTxt = (tb.reasons && tb.reasons.length) ? tb.reasons.join('; ') : 'Sidik jari kriptografi tidak cocok dengan rantai kunci.';
+    explainHtml = `<div class="chain-tamper-explain"><strong>Penjelasan Singkat (${escapeHtml(tb.filename === 'CHAIN_TRUNCATION' ? 'Truncation Attack' : `Blok #${tb.block_index}`)}):</strong> ${escapeHtml(reasonTxt)}</div>`;
   }
 
-  wrap.innerHTML = `<div class="chain-visual-strip">${htmlParts.join('')}</div>${explainHtml}`;
+  wrap.innerHTML = `<div class="chain-visual-strip" ${truncEntry ? 'style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));"' : ''}>${htmlParts.join('')}</div>${explainHtml}`;
+}
+
+function updateHeadSealBadge(head) {
+  const el = document.getElementById('headSealBadge');
+  if (!el) return;
+  if (!head || !head.present) {
+    el.className = 'head-seal-pill';
+    el.textContent = 'Segel Kepala HMAC: Belum ada';
+    return;
+  }
+  const ok = Boolean(head.head_hmac_valid && head.count_matches && head.head_hash_matches);
+  el.className = `head-seal-pill ${ok ? 'ok' : 'bad'}`;
+  if (ok) {
+    el.textContent = `Segel Kepala HMAC: ${head.actual_count ?? head.block_count ?? 0} Blok • VALID`;
+  } else {
+    el.textContent = `Segel Kepala HMAC: RUSAK (${head.actual_count ?? '?'}/${head.block_count ?? '?'} Blok)`;
+  }
+}
+
+function resolveTab2GuideKey() {
+  const verObj = latestLedgerInspection && latestLedgerInspection.verification;
+  if (verObj && !verObj.valid) return 'tab2_tampered';
+  if (currentLedgerSubTab === 'doc') return 'tab2_step3_doc';
+  if (currentLedgerSubTab === 'hacker') return 'tab2_step4_hacker';
+  if (tab2MultihopDone) return 'tab2_step2';
+  return 'tab2_step1';
+}
+
+function switchLedgerSubTab(mode) {
+  applyLedgerSubTabDom(mode);
+  if (currentMainTab === 2 && typeof updateMissionGuide === 'function') {
+    guideDismissedForStage = false;
+    updateMissionGuide(resolveTab2GuideKey());
+  }
+}
+
+function setHackerAttackMode(mode) {
+  currentHackerAttackMode = mode;
+  document.querySelectorAll('.attack-pill[data-attack-mode]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-attack-mode') === mode);
+  });
+  const desc = document.getElementById('attackModeDesc');
+  const fieldsWrap = document.getElementById('hackerEditableFieldsWrap');
+  const targetRow = document.querySelector('.hacker-target-row');
+  if (mode === 'edit_field') {
+    if (desc) desc.textContent = 'Skenario Level 1: Mengubah payload blok secara off-protocol tanpa memperbarui tanda tangan HMAC, membuktikan sidik jari blok langsung bentrok.';
+    if (fieldsWrap) fieldsWrap.style.display = 'grid';
+    if (targetRow) targetRow.style.display = 'block';
+  } else if (mode === 'rehash_cascade') {
+    if (desc) desc.textContent = 'Skenario Level 2 (Re-Hash Berantai Tanpa Kunci HMAC): Mengubah data lalu menghitung ulang SHA-256 polos seluruh blok setelahnya agar prev_hash terlihat tersambung — tetap GAGAL karena verifikator memakai HMAC-SHA256 + Secret Key & Head Seal.';
+    if (fieldsWrap) fieldsWrap.style.display = 'grid';
+    if (targetRow) targetRow.style.display = 'block';
+  } else {
+    if (desc) desc.textContent = 'Skenario Level 3 (Truncation Attack): Menghapus paksa blok paling akhir dari Block Store agar transaksi terakhir seolah tidak pernah tercatat — tetap tertangkap oleh Signed Head Checkpoint.';
+    if (fieldsWrap) fieldsWrap.style.display = 'none';
+    if (targetRow) targetRow.style.display = 'none';
+  }
+  updateHackerLivePreview();
+}
+
+function getSelectedHackerBlock() {
+  const sel = document.getElementById('hackerTargetBlockSelect');
+  const blocks = (latestLedgerInspection && latestLedgerInspection.blocks) || latestLedgerBlocks || [];
+  if (!blocks.length) return null;
+  const idx = sel ? Number(sel.value) : 0;
+  return blocks.find(b => Number(b.block_index) === idx) || blocks[0];
+}
+
+function syncHackerBlockOptions(blocks) {
+  const sel = document.getElementById('hackerTargetBlockSelect');
+  if (!sel) return;
+  const prevVal = sel.value;
+  if (!blocks || !blocks.length) {
+    sel.innerHTML = '<option value="">(0 blok — otomatis kirim 3 blok bersih saat diserang)</option>';
+    updateHackerLivePreview();
+    return;
+  }
+  const ordered = blocks.slice().reverse();
+  sel.innerHTML = ordered.map(b => {
+    const label = `Blok #${b.block_index} — ${b.source_unit} (${(b.verdict || '').slice(0, 28)})`;
+    return `<option value="${escapeHtml(b.block_index)}">${escapeHtml(label)}</option>`;
+  }).join('');
+
+  if (prevVal && ordered.some(b => String(b.block_index) === String(prevVal))) {
+    sel.value = prevVal;
+  } else {
+    const korem = ordered.find(b => Number(b.block_index) === 2) || ordered[0];
+    sel.value = String(korem.block_index);
+  }
+  onHackerBlockSelectChange();
+}
+
+function onHackerBlockSelectChange() {
+  const b = getSelectedHackerBlock();
+  const vIn = document.getElementById('hackVerdictInput');
+  const tIn = document.getElementById('hackTargetUnitInput');
+  const fIn = document.getElementById('hackFilenameInput');
+  if (b && vIn && tIn && fIn) {
+    vIn.value = b.verdict || '';
+    tIn.value = b.target_unit || '';
+    fIn.value = b.filename || '';
+  }
+  updateHackerLivePreview();
+}
+
+function applyHackerPreset() {
+  const vIn = document.getElementById('hackVerdictInput');
+  const tIn = document.getElementById('hackTargetUnitInput');
+  const fIn = document.getElementById('hackFilenameInput');
+  if (vIn) vIn.value = 'CLEAN -> Lolos Verifikasi Tanpa Audit [BYPASSED]';
+  if (tIn) tIn.value = 'Server Eksternal Tidak Terotorisasi';
+  if (fIn && !fIn.value.includes('bypassed')) fIn.value = 'dokumen_bypassed_pusat.pdf';
+  updateHackerLivePreview();
+}
+
+async function computeBrowserSha256Hex(text) {
+  if (!window.crypto || !window.crypto.subtle) return null;
+  const buf = new TextEncoder().encode(text);
+  const digest = await window.crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function updateHackerLivePreview() {
+  const sqlEl = document.getElementById('hackerSqlPreview');
+  const avaEl = document.getElementById('avalanchePreviewBox');
+  if (!sqlEl || !avaEl) return;
+
+  const b = getSelectedHackerBlock();
+  const verdict = (document.getElementById('hackVerdictInput') || {}).value || '';
+  const targetUnit = (document.getElementById('hackTargetUnitInput') || {}).value || '';
+  const filename = (document.getElementById('hackFilenameInput') || {}).value || '';
+
+  if (!b) {
+    sqlEl.textContent = currentHackerAttackMode === 'truncate_last'
+      ? '[TRUNCATE_TAIL] Hapus blok paling akhir dari Block Store tanpa segel ulang Head Checkpoint'
+      : `[MUTATE BLOK #2] verdict -> "${verdict || 'CLEAN [BYPASSED]'}"`;
+    avaEl.innerHTML = '<div style="color:#93c5fd;font-weight:700;">Live Avalanche Effect:</div><div style="color:#94a3b8;">Belum ada blok di Block Store. Klik "Jalankan Uji Manipulasi" untuk otomatis mengisi 3 blok bersih lalu menguji manipulasi.</div>';
+    return;
+  }
+
+  if (currentHackerAttackMode === 'truncate_last') {
+    const blocks = (latestLedgerInspection && latestLedgerInspection.blocks) || latestLedgerBlocks || [];
+    const maxBlock = blocks[0] || b;
+    sqlEl.textContent = `[TRUNCATE_TAIL] Hapus Blok #${maxBlock.block_index} (${maxBlock.source_unit}) dari Block Store tanpa memperbarui Signed Head Checkpoint`;
+    avaEl.innerHTML = `<div style="color:#fca5a5;font-weight:700;">Target Truncation: Blok #${escapeHtml(maxBlock.block_index)} (${escapeHtml(maxBlock.source_unit)})</div><div style="color:#cbd5e1;">Penghapusan blok ekor akan memicu selisih jumlah blok terhadap Signed Head Seal.</div>`;
+    return;
+  }
+
+  const diffs = [];
+  if (verdict && verdict !== b.verdict) diffs.push(`verdict: "${b.verdict}" -> "${verdict}"`);
+  if (targetUnit && targetUnit !== b.target_unit) diffs.push(`target_unit: "${b.target_unit}" -> "${targetUnit}"`);
+  if (filename && filename !== b.filename) diffs.push(`filename: "${b.filename}" -> "${filename}"`);
+  if (!diffs.length) {
+    const suffix = currentHackerAttackMode === 'rehash_cascade' ? ' [FORGED_CLEAN_BYPASS]' : ' [PAYLOAD_SISIPAN_TAMPERED]';
+    diffs.push(`verdict: "${b.verdict || ''}" -> "${b.verdict || ''}${suffix}"`);
+  }
+
+  sqlEl.textContent = currentHackerAttackMode === 'rehash_cascade'
+    ? `[MUTATE + RE-HASH BLOK #${b.block_index}..Ekor] ${diffs.join(' | ')} (+ hitung ulang SHA-256 polos berantai)`
+    : `[MUTATE BLOK #${b.block_index}] ${diffs.join(' | ')}`;
+
+  const draftPayloadObj = {
+    bsre_status: b.bsre_status || '',
+    doc_sha256: b.doc_sha256 || '',
+    file_format: b.file_format || 'PDF',
+    filename: filename || b.filename || '',
+    prev_hash: b.prev_hash || '',
+    source_unit: b.source_unit || '',
+    target_unit: targetUnit || b.target_unit || '',
+    timestamp: b.timestamp || '',
+    verdict: verdict || b.verdict || ''
+  };
+  const sortedKeys = Object.keys(draftPayloadObj).sort();
+  const canonicalDraft = JSON.stringify(draftPayloadObj, sortedKeys);
+  const whatIfSha = await computeBrowserSha256Hex(canonicalDraft);
+  const origStored = b.block_hash || '-';
+  const isModified = (verdict !== (b.verdict || '')) || (targetUnit !== (b.target_unit || '')) || (filename !== (b.filename || ''));
+  avaEl.innerHTML = `
+    <div style="color:#93c5fd;font-weight:700;margin-bottom:3px;">Live Avalanche Effect (${isModified ? '<span style="color:#fca5a5;">TERDETEKSI PERUBAHAN KARAKTER!</span>' : '<span style="color:#6ee7b7;">Belum diubah — edit kolom di atas</span>'}):</div>
+    <div><span style="color:#94a3b8;">Stored HMAC-SHA256 :</span> <span style="color:#6ee7b7;">${escapeHtml(origStored)}</span></div>
+    <div><span style="color:#94a3b8;">Draft Plain SHA-256:</span> <span style="color:${isModified ? '#fca5a5' : '#fde68a'};">${escapeHtml(whatIfSha || '(WebCrypto non-aktif)')}</span></div>
+  `;
+}
+
+async function executeHackerAttack() {
+  const out = document.getElementById('hackerConsoleOutput');
+  const btn = document.getElementById('btnExecHackerAttack');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+  try {
+    if (!latestLedgerBlocks || latestLedgerBlocks.length === 0) {
+      if (out) out.textContent = '$ # Ledger masih 0 blok -> menjalankan seed 3-hop bersih (Kodim -> Korem -> Pusat) terlebih dahulu...\n';
+      const seedRes = await fetch('/api/demo/multihop', { method: 'POST' });
+      const seedData = await seedRes.json();
+      renderMenuCdrBar(seedData.soc_view);
+      await refreshState();
+    }
+
+    const sel = document.getElementById('hackerTargetBlockSelect');
+    const blockIdx = sel && sel.value ? Number(sel.value) : null;
+    const b = getSelectedHackerBlock();
+    const updates = {};
+    if (currentHackerAttackMode !== 'truncate_last') {
+      const v = (document.getElementById('hackVerdictInput') || {}).value;
+      const t = (document.getElementById('hackTargetUnitInput') || {}).value;
+      const f = (document.getElementById('hackFilenameInput') || {}).value;
+      if (v && (!b || v !== b.verdict)) updates.verdict = v;
+      if (t && (!b || t !== b.target_unit)) updates.target_unit = t;
+      if (f && (!b || f !== b.filename)) updates.filename = f;
+    }
+
+    const res = await fetch('/api/ledger/attack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        attack_type: currentHackerAttackMode,
+        block_index: blockIdx,
+        updates: Object.keys(updates).length ? updates : null
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (out) out.textContent = `[ERROR] ${data.error || res.status}`;
+      return;
+    }
+
+    const soc = data.soc_view || {};
+    const ver = soc.verification || {};
+    const opLines = (soc.mutation_ops || []).map(s => `[BLOCK-STORE] ${s}`).join('\n');
+    const tbLines = (ver.tampered_blocks || []).map(tb =>
+      ` ├─ Blok #${tb.block_index} (${tb.filename}): ${(tb.reasons || []).join('; ')}`
+    ).join('\n');
+
+    if (out) {
+      out.textContent =
+        `${opLines}\n` +
+        `[LEDGER] Mutasi langsung terhadap Block Store selesai.\n\n` +
+        `$ kertopati-ledger verify --strict-hmac --check-head-seal\n` +
+        `[VERIFIER] Status: ${ver.status || 'TAMPERED'} (Total Blok: ${ver.total_blocks ?? '-'})\n` +
+        `${tbLines || ' └─ Integritas rantai gagal diverifikasi.'}\n\n` +
+        `[KESIMPULAN KRIPTOGRAFI]\n` +
+        (currentHackerAttackMode === 'rehash_cascade'
+          ? `Meskipun penyerang menghitung ulang SHA-256 pada ${soc.rehashed_blocks_count} blok beruntun agar prev_hash tampak nyambung, verifikasi tetap GAGAL karena kunci HMAC server tidak dimiliki penyerang & Head Seal tidak cocok.`
+          : (currentHackerAttackMode === 'truncate_last'
+            ? `Meskipun blok ekor (#${soc.deleted_block_index}) dihapus total dari Block Store, Signed Head Checkpoint langsung menangkap selisih jumlah blok.`
+            : `Perubahan payload pada Block Store membuat HMAC-SHA256 hasil hitung ulang tidak cocok dengan sidik jari blok asli.`));
+    }
+    await refreshState();
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+async function recoverCleanChain() {
+  const out = document.getElementById('hackerConsoleOutput');
+  await fetch('/api/demo/reset', {
+    method: 'POST',
+    headers: { 'X-Kertopati-Token': KERTOPATI_API_TOKEN }
+  });
+  const mhRes = await fetch('/api/demo/multihop', { method: 'POST' });
+  const mhData = await mhRes.json();
+  if (mhRes.ok) tab2MultihopDone = true;
+  renderMenuCdrBar(mhData.soc_view);
+  await refreshState();
+  if (out) {
+    out.textContent =
+      `$ kertopati-ledger reset --reseed-multihop\n` +
+      `[OK] Block Store & Signed Head Checkpoint dipulihkan ke kondisi bersih.\n` +
+      `[OK] 3 Blok HMAC-SHA256 baru dicatat (Kodim 0606 -> Korem 061 -> PUSSIBERAD Pusat).\n` +
+      `[VERIFIER] CHAIN INTEGRITY: VERIFIED`;
+  }
+}
+
+function jumpToHackerLabBlock(blockIndex) {
+  switchMainTab(2);
+  switchLedgerSubTab('hacker');
+  const sel = document.getElementById('hackerTargetBlockSelect');
+  if (sel) {
+    sel.value = String(blockIndex);
+    onHackerBlockSelectChange();
+  }
+  const dlg = document.getElementById('ledgerInspectDialog');
+  if (dlg && dlg.open) dlg.close();
+  const subBtn = document.getElementById('ledgerSubBtnHacker');
+  if (subBtn) subBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function openLedgerInspectDialog(blockIndex) {
+  const dlg = document.getElementById('ledgerInspectDialog');
+  const sub = document.getElementById('ledgerInspectSubtitle');
+  const body = document.getElementById('ledgerInspectBody');
+  const jumpBtn = document.getElementById('btnJumpToHackerLab');
+  if (!dlg || !body) return;
+
+  const blocks = (latestLedgerInspection && latestLedgerInspection.blocks) || latestLedgerBlocks || [];
+  const b = blocks.find(x => Number(x.block_index) === Number(blockIndex));
+  if (!b) return;
+
+  const head = (latestLedgerInspection && latestLedgerInspection.head_checkpoint) || {};
+  if (sub) {
+    sub.textContent = `Blok #${b.block_index} • ${b.source_unit} → ${b.target_unit} • ${b.timestamp}`;
+  }
+  if (jumpBtn) {
+    jumpBtn.onclick = () => jumpToHackerLabBlock(b.block_index);
+  }
+
+  let prettyCanonical = b.canonical_json || '';
+  try {
+    if (prettyCanonical) prettyCanonical = JSON.stringify(JSON.parse(prettyCanonical), null, 2);
+  } catch (_) {}
+
+  const hmacOk = b.hmac_valid !== false;
+  const linkOk = b.prev_link_valid !== false;
+  const idxOk = b.index_valid !== false;
+  const reasonsHtml = (b.reasons && b.reasons.length)
+    ? `<div class="chain-tamper-explain" style="margin:0 0 12px 0;"><strong>Temuan Anomali Kriptografi:</strong><ul style="margin:4px 0 0 18px;padding:0;">${b.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>`
+    : `<div style="margin:0 0 12px 0;padding:8px 11px;border-radius:8px;border:1px solid rgba(16,185,129,.45);background:rgba(16,185,129,.1);color:#a7f3d0;font-size:12px;">Sidik jari HMAC-SHA256, tautan <code>prev_hash</code>, dan urutan blok terverifikasi 100% utuh.</div>`;
+
+  body.innerHTML =
+    `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <span class="badge ${hmacOk ? 'ok' : 'bad'}">HMAC-SHA256: ${hmacOk ? 'COCOK' : 'TIDAK COCOK'}</span>
+      <span class="badge ${linkOk ? 'ok' : 'bad'}">Prev-Hash Link: ${linkOk ? 'TERHUBUNG' : 'TERPUTUS'}</span>
+      <span class="badge ${idxOk ? 'ok' : 'bad'}">Urutan Index: ${idxOk ? 'VALID' : 'RUSAK'}</span>
+      ${b.plain_sha_matched_stored ? '<span class="badge bad">INDIKASI RE-HASH POLOS TANPA KUNCI HMAC</span>' : ''}
+    </div>` +
+    reasonsHtml +
+    `<div style="display:grid;gap:8px;margin-bottom:12px;">
+      <div style="background:#050b18;border:1px solid var(--border);border-radius:8px;padding:9px 11px;">
+        <div style="font-size:11px;font-weight:700;color:#93c5fd;">Stored <code>block_hash</code> (Tersimpan di Block Store):</div>
+        <div class="hash-mono" style="color:#f8fafc;">${escapeHtml(b.block_hash || '-')}</div>
+        <div style="font-size:11px;font-weight:700;color:#93c5fd;margin-top:6px;">Recomputed <code>HMAC-SHA256</code> (Hitung Ulang Server):</div>
+        <div class="hash-mono" style="color:${hmacOk ? '#6ee7b7' : '#fca5a5'};">${escapeHtml(b.recomputed_hmac || '-')}</div>
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-top:6px;">Plain <code>SHA-256</code> (Tanpa Secret Key):</div>
+        <div class="hash-mono" style="color:#fde68a;">${escapeHtml(b.plain_sha256 || '-')}</div>
+      </div>
+      <div style="background:#050b18;border:1px solid var(--border);border-radius:8px;padding:9px 11px;">
+        <div style="font-size:11px;font-weight:700;color:#93c5fd;">Tautan Rantai &amp; Dokumen:</div>
+        <div class="hash-mono"><span style="color:#94a3b8;">prev_hash (Stored)  :</span> ${escapeHtml(b.prev_hash || '-')}</div>
+        <div class="hash-mono"><span style="color:#94a3b8;">prev_hash (Expected):</span> ${escapeHtml(b.expected_prev_hash || '-')}</div>
+        <div class="hash-mono"><span style="color:#94a3b8;">doc_sha256          :</span> ${escapeHtml(b.doc_sha256 || '-')}</div>
+      </div>
+    </div>` +
+    `<div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:4px;">Canonical JSON Payload (Input Hash Deterministik):</div>
+      <pre style="margin:0;font-size:11.5px;">${escapeHtml(prettyCanonical || '-')}</pre>
+    </div>` +
+    `<div style="background:#050b18;border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:11.5px;">
+      <div style="font-weight:700;color:#93c5fd;margin-bottom:4px;">Signed Head Checkpoint (Segel Kepala HMAC)</div>
+      <div class="hash-mono">Status Segel HMAC: ${head.head_hmac_valid ? 'VALID' : 'TIDAK VALID'} | Jumlah Blok: actual=${head.actual_count ?? '-'} vs seal=${head.block_count ?? '-'} | head_hash=${escapeHtml(head.head_hash || '-')}</div>
+    </div>`;
+
+  dlg.showModal();
+}
+
+function syncDocVerifyBlockOptions(blocks) {
+  const sel = document.getElementById('docVerifyBlockSelect');
+  if (!sel) return;
+  const prevVal = sel.value;
+  if (!blocks || !blocks.length) {
+    sel.innerHTML = '<option value="">(0 blok — otomatis kirim 3 blok bersih saat diuji)</option>';
+    return;
+  }
+  const ordered = blocks.slice().reverse();
+  sel.innerHTML = ordered.map(b => {
+    const lbl = `Blok #${b.block_index} — ${b.source_unit} (${b.filename})`;
+    return `<option value="${escapeHtml(b.block_index)}">${escapeHtml(lbl)}</option>`;
+  }).join('');
+  if (prevVal && ordered.some(b => String(b.block_index) === String(prevVal))) {
+    sel.value = prevVal;
+  } else {
+    const latest = ordered[ordered.length - 1];
+    sel.value = String(latest.block_index);
+  }
+}
+
+async function ensureSeededForDocVerify() {
+  if (!latestLedgerBlocks || latestLedgerBlocks.length === 0) {
+    const seedRes = await fetch('/api/demo/multihop', { method: 'POST' });
+    const seedData = await seedRes.json();
+    renderMenuCdrBar(seedData.soc_view);
+    await refreshState();
+  }
+}
+
+async function runDocVerify(sampleMode) {
+  const box = document.getElementById('docVerifyResultBox');
+  if (box) box.innerHTML = '<div style="color:#93c5fd;">Menghitung SHA-256 isi file & mencocokkan dengan Ledger...</div>';
+  await ensureSeededForDocVerify();
+
+  const sel = document.getElementById('docVerifyBlockSelect');
+  const blockIdx = sel && sel.value ? Number(sel.value) : null;
+  let actualMode = sampleMode;
+  if (sampleMode === 'auto_clean') {
+    actualMode = (blockIdx === 1) ? 'original_clean' : 'sanitized_cdr';
+  }
+  const payloadTxt = (document.getElementById('docTamperPayloadInput') || {}).value || '';
+
+  const fd = new FormData();
+  fd.append('sample_mode', actualMode);
+  if (blockIdx) fd.append('block_index', String(blockIdx));
+  fd.append('tamper_payload', payloadTxt);
+
+  const res = await fetch('/api/ledger/verify-document', { method: 'POST', body: fd });
+  const data = await res.json();
+  renderDocVerifyResult(data, res.ok);
+}
+
+async function runDocFileVerify() {
+  const fileInput = document.getElementById('docVerifyFileInput');
+  const box = document.getElementById('docVerifyResultBox');
+  if (!fileInput || !fileInput.files || !fileInput.files.length) {
+    if (box) {
+      box.className = 'doc-verify-result bad';
+      box.innerHTML = '<strong style="color:#fca5a5;">Pilih file terlebih dahulu</strong> pada input unggah di atas sebelum memverifikasi ke Ledger.';
+    }
+    return;
+  }
+  await ensureSeededForDocVerify();
+  const sel = document.getElementById('docVerifyBlockSelect');
+  const blockIdx = sel && sel.value ? Number(sel.value) : null;
+
+  const fd = new FormData();
+  fd.append('sample_mode', 'upload');
+  fd.append('file', fileInput.files[0]);
+  if (blockIdx) fd.append('block_index', String(blockIdx));
+
+  const res = await fetch('/api/ledger/verify-document', { method: 'POST', body: fd });
+  const data = await res.json();
+  renderDocVerifyResult(data, res.ok);
+}
+
+function renderDocVerifyResult(d, isOk) {
+  const box = document.getElementById('docVerifyResultBox');
+  if (!box) return;
+  if (!isOk || d.error) {
+    box.className = 'doc-verify-result bad';
+    box.innerHTML = `<strong style="color:#fca5a5;">Gagal Verifikasi:</strong> ${escapeHtml(d.error || 'Terjadi kesalahan.')}`;
+    return;
+  }
+
+  let badgeTxt = '';
+  let badgeCls = 'ok';
+  let headlineDesc = '';
+  if (d.verdict === 'AUTHENTIC_VERIFIED') {
+    badgeTxt = `DOKUMEN OTENTIK — COCOK DENGAN BLOK #${d.block_index}`;
+    badgeCls = 'ok';
+    headlineDesc = `Hash SHA-256 aktual seluruh byte file <strong>${escapeHtml(d.checked_filename)}</strong> cocok 100% dengan sidik jari <code>doc_sha256</code> di Blok #${escapeHtml(d.block_index)} dan rantai HMAC Ledger berstatus UTUH.`;
+  } else if (d.verdict === 'DOCUMENT_TAMPERED') {
+    badgeTxt = `DOKUMEN DIMODIFIKASI — HASH BERKAS TIDAK COCOK`;
+    badgeCls = 'bad';
+    headlineDesc = `Isi file <strong>${escapeHtml(d.checked_filename)}</strong> telah berubah sehingga <code>SHA-256(file)</code> bentrok dengan <code>doc_sha256</code> yang dikunci di Blok #${escapeHtml(d.block_index)} (${escapeHtml(d.source_unit)}).`;
+  } else if (d.verdict === 'LEDGER_SPOOFED_TAMPERED') {
+    badgeTxt = `ANOMALI GANDA — BLOCK STORE LEDGER DIPALSUKAN`;
+    badgeCls = 'bad';
+    headlineDesc = `Meskipun hash file cocok dengan field <code>doc_sha256</code> di Block Store Blok #${escapeHtml(d.block_index)}, verifier kriptografi mendeteksi <strong>rantai HMAC / Head Seal Ledger RUSAK</strong> (indikasi pemalsuan payload blok agar file tidak sah terlihat valid).`;
+  } else {
+    badgeTxt = `DOKUMEN & LEDGER TIDAK VALID`;
+    badgeCls = 'bad';
+    headlineDesc = `Hash isi file tidak cocok dengan Blok #${escapeHtml(d.block_index)} dan integritas rantai Ledger juga berstatus TAMPERED.`;
+  }
+
+  const spoofBtnHtml = (d.verdict === 'DOCUMENT_TAMPERED')
+    ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+         <button type="button" id="btnSpoofDocShaInLedger" class="btn btn-amber btn-sm" style="margin:0;">Simulasikan Pemalsuan doc_sha256 di Block Store →</button>
+       </div>`
+    : '';
+
+  box.className = `doc-verify-result ${badgeCls}`;
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+      <span class="badge ${badgeCls}">${badgeTxt}</span>
+      <span style="font-size:11.5px;color:#94a3b8;">Ukuran Diuji: <strong>${escapeHtml(d.file_size)} B</strong>${d.size_before ? ` (Awal: ${escapeHtml(d.size_before)} B)` : ''}</span>
+    </div>
+    <div style="margin-bottom:8px;">${headlineDesc}</div>
+    <div style="font-size:11.5px;color:#cbd5e1;margin-bottom:8px;"><strong>Aksi Uji:</strong> ${escapeHtml(d.mutation_summary || '-')}</div>
+    <div style="background:#020617;border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+      <div class="hash-mono"><span style="color:#94a3b8;">SHA-256 File Diuji   :</span> <span style="color:${d.doc_sha256_match ? '#6ee7b7' : '#fca5a5'};">${escapeHtml(d.file_sha256)}</span></div>
+      <div class="hash-mono" style="margin-top:3px;"><span style="color:#94a3b8;">doc_sha256 Blok #${escapeHtml(d.block_index)}   :</span> <span style="color:#93c5fd;">${escapeHtml(d.expected_doc_sha256)}</span></div>
+      <div class="hash-mono" style="margin-top:3px;"><span style="color:#94a3b8;">Integritas HMAC Chain:</span> <span style="color:${d.chain_valid ? '#6ee7b7' : '#fca5a5'};">${d.chain_valid ? 'VERIFIED (Utuh)' : 'TAMPERED (Terputus!)'}</span></div>
+    </div>
+    ${spoofBtnHtml}
+  `;
+
+  const spoofBtn = document.getElementById('btnSpoofDocShaInLedger');
+  if (spoofBtn) {
+    spoofBtn.onclick = () => spoofDocShaInLedger(d.block_index, d.file_sha256, d.checked_filename);
+  }
+}
+
+async function spoofDocShaInLedger(blockIndex, forgedSha256, checkedFilename) {
+  const out = document.getElementById('hackerConsoleOutput');
+  const res = await fetch('/api/ledger/attack', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      attack_type: 'edit_field',
+      block_index: blockIndex,
+      updates: { doc_sha256: forgedSha256 }
+    })
+  });
+  const data = await res.json();
+  if (out && res.ok) {
+    const opLines = ((data.soc_view && data.soc_view.mutation_ops) || []).map(s => `[BLOCK-STORE] ${s}`).join('\n');
+    out.textContent =
+      `${opLines}\n` +
+      `[SIMULASI] Mencoba menyamakan doc_sha256 di Blok #${blockIndex} dengan file termodifikasi (${checkedFilename})...\n` +
+      `$ kertopati-ledger verify --strict-hmac --check-head-seal\n` +
+      `[ALERT] CHAIN INTEGRITY: TAMPERED!\n` +
+      ` └─ Meskipun hash dokumen di Block Store sudah diganti, HMAC-SHA256 Blok #${blockIndex} langsung pecah karena payload blok tidak cocok dengan tanda tangan kunci rahasia server.`;
+  }
+  await refreshState();
+  const box = document.getElementById('docVerifyResultBox');
+  if (box) {
+    box.className = 'doc-verify-result bad';
+    box.innerHTML = `
+      <div style="margin-bottom:6px;"><span class="badge bad">ANOMALI GANDA — BLOCK STORE LEDGER DIPALSUKAN (TAMPERED)</span></div>
+      <div>Hash file termodifikasi (<code>${escapeHtml(forgedSha256.slice(0, 16))}...</code>) telah disuntikkan ke field <code>doc_sha256</code> Blok #${escapeHtml(blockIndex)} di Block Store agar berkas terlihat cocok — namun <strong>rantai HMAC-SHA256 Ledger langsung menandai status TAMPERED!</strong></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="btn btn-amber btn-sm" style="margin:0;" onclick="switchLedgerSubTab('hacker')">Lihat Log Verifier di Lab Anti-Tamper →</button>
+      </div>
+    `;
+  }
 }
 
 async function refreshState() {
-  const res = await fetch('/api/state');
+  const [res, inspRes] = await Promise.all([
+    fetch('/api/state'),
+    fetch('/api/ledger/inspect')
+  ]);
   const st = await res.json();
-  latestLedgerBlocks = st.blocks || [];
-  const tamperedSet = new Set();
-  if (st.ledger_verification) {
-    updateIntegrityBadge(st.ledger_verification);
-    (st.ledger_verification.tampered_blocks || []).forEach(tb => tamperedSet.add(tb.block_index));
+  if (inspRes && inspRes.ok) {
+    latestLedgerInspection = await inspRes.json();
   }
-  renderChainVisualStrip(latestLedgerBlocks, st.ledger_verification);
+  latestLedgerBlocks = (latestLedgerInspection && latestLedgerInspection.blocks) || st.blocks || [];
+  const tamperedSet = new Set();
+  const verObj = (latestLedgerInspection && latestLedgerInspection.verification) || st.ledger_verification;
+  if (verObj) {
+    updateIntegrityBadge(verObj);
+    (verObj.tampered_blocks || []).forEach(tb => {
+      if (tb.filename !== 'CHAIN_TRUNCATION' && tb.filename !== 'LEDGER_HEAD_SEAL') {
+        tamperedSet.add(tb.block_index);
+      }
+    });
+  }
+  updateHeadSealBadge(latestLedgerInspection && latestLedgerInspection.head_checkpoint);
+  renderChainVisualStrip(latestLedgerBlocks, verObj);
+  syncHackerBlockOptions(latestLedgerBlocks);
+  syncDocVerifyBlockOptions(latestLedgerBlocks);
 
   const timeline = document.getElementById('ledgerTimeline');
-  timeline.innerHTML = st.blocks.length
-    ? st.blocks.map(b => {
+  timeline.innerHTML = latestLedgerBlocks.length
+    ? latestLedgerBlocks.map(b => {
         const isTampered = tamperedSet.has(b.block_index);
         const isClean = (b.verdict || '').includes('CLEAN') && !isTampered;
         const isSandboxDivert = (b.verdict || '').includes('AUTO-SANDBOX') || (b.verdict || '').includes('SANDBOX');
         const prev8 = (b.prev_hash || '').slice(0, 8);
         const block8 = (b.block_hash || '').slice(0, 8);
         const brokenBanner = isTampered
-          ? `<div class="broken-banner">⛔ RANTAI TERPUTUS DI TITIK INI — DATA BLOK #${b.block_index} TELAH DIMODIFIKASI</div>`
+          ? `<div class="broken-banner">RANTAI TERPUTUS DI TITIK INI — DATA BLOK #${b.block_index} TELAH DIMODIFIKASI</div>`
           : '';
         const tab3Btn = isSandboxDivert
-          ? `<div><button type="button" class="btn btn-amber btn-sm" style="margin:8px 0 0 0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button></div>`
+          ? `<button type="button" class="btn btn-amber btn-sm" style="margin:0;" data-action="go-tab" data-tab="3">Lihat di Plasebo Sandbox &amp; Vaksin (Tab 3) →</button>`
           : '';
         return `
         <div class="tl-item">
@@ -1233,16 +2057,23 @@ async function refreshState() {
             <div class="tl-route">${escapeHtml(b.source_unit)} → ${escapeHtml(b.target_unit)}</div>
             <div class="tl-meta">${escapeHtml(b.bsre_status)}</div>
             <div class="tl-chain">
-              <span class="hash-badge" style="${hashBadgeStyle(prev8, isTampered)}">🔑 Kunci Sebelumnya: ${prev8}</span>
+              <span class="hash-badge" style="${hashBadgeStyle(prev8, isTampered)}">Kunci Sebelumnya: ${prev8}</span>
               <span>→</span>
-              <span class="hash-badge" style="${hashBadgeStyle(block8, isTampered)}">🔒 Kunci Blok Ini: ${block8}</span>
+              <span class="hash-badge" style="${hashBadgeStyle(block8, isTampered)}">Kunci Blok Ini: ${block8}</span>
             </div>
-            ${tab3Btn}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+              <button type="button" class="btn btn-blue btn-sm" style="margin:0;" data-action="inspect-block" data-block="${escapeHtml(b.block_index)}">Inspeksi Kriptografi Blok</button>
+              ${tab3Btn}
+            </div>
             ${brokenBanner}
           </div>
         </div>`;
       }).join('')
     : '<div class="sub">Belum ada catatan perpindahan dokumen di rantai ledger.</div>';
+
+  if (currentMainTab === 2 && typeof updateMissionGuide === 'function') {
+    updateMissionGuide(resolveTab2GuideKey());
+  }
 
   document.getElementById('sandboxList').innerHTML = st.sandbox_events.length
     ? st.sandbox_events.map(e => {
@@ -1492,7 +2323,7 @@ const GUIDE_STAGES = {
   step5: {
     stepIdx: 5,
     totalDots: 5,
-    badge: 'MISI SELESAI ✓',
+    badge: 'MISI SELESAI',
     badgeClass: 'done',
     blocks: ['guideTargetPlacebo'],
     blockClass: 'ok-focus',
@@ -1503,6 +2334,76 @@ const GUIDE_STAGES = {
     hasNext: false,
     title: 'Semua Satuan IMMUNIZED!',
     desc: 'Lihat laporan Plasebo & kronologi lengkap di sini. Klik "Buka Laporan Kronologi Detail" untuk dialog siap lapor, atau klik "1. Kirim Dokumen (Ulangi Misi)" / "Reset Demo Data" lalu refresh browser untuk mengulang dari awal.'
+  },
+  tab2_step1: {
+    stepIdx: 1,
+    totalDots: 4,
+    badge: 'TAHAP 1/4 — RANTAI BERSIH',
+    badgeClass: '',
+    blocks: ['tab2Step1Card'],
+    blockClass: '',
+    anchorId: 'btnTab2Multihop',
+    nextBtnId: 'btnTab2Multihop',
+    preferredSide: 'bottom',
+    hasNext: false,
+    title: 'Kirim Rantai Dokumen & Sanitasi CDR',
+    desc: 'Klik tombol hijau ini untuk mengirim surat dinas bersih berjenjang (Kodim 0606 ke PUSSIBERAD Pusat), mensterilkan dokumen via CDR, dan mencatat 3 blok HMAC-SHA256.'
+  },
+  tab2_step2: {
+    stepIdx: 2,
+    totalDots: 4,
+    badge: 'TAHAP 2/4 — UJI ANTI-TAMPER',
+    badgeClass: '',
+    blocks: ['tab2Step2Card', 'tab2ChainCard'],
+    blockClass: 'ok-focus',
+    anchorId: 'btnTab2Tamper',
+    nextBtnId: 'btnTab2Tamper',
+    preferredSide: 'bottom',
+    hasNext: true,
+    title: 'Uji Manipulasi Data di Korem',
+    desc: 'Rantai 3 blok & berkas steril CDR telah tercatat. Klik tombol ini untuk simulasi perubahan data di Korem, atau klik "Lanjut" untuk menguji Verifikasi Berkas & Lab Anti-Tamper.'
+  },
+  tab2_step3_doc: {
+    stepIdx: 3,
+    totalDots: 4,
+    badge: 'TAHAP 3/4 — VERIFIKASI BERKAS',
+    badgeClass: '',
+    blocks: ['tab2WorkbenchCard'],
+    blockClass: '',
+    anchorId: 'btnDocTamper1Byte',
+    nextBtnId: 'btnDocTamper1Byte',
+    preferredSide: 'bottom',
+    hasNext: true,
+    title: 'Uji Perubahan Isi Dokumen (Off-Chain)',
+    desc: 'Uji perubahan 1 byte atau penyisipan teks pada PDF (atau unggah berkas sendiri) untuk membuktikan perubahan isi file langsung ditolak oleh doc_sha256 Ledger.'
+  },
+  tab2_step4_hacker: {
+    stepIdx: 4,
+    totalDots: 4,
+    badge: 'TAHAP 4/4 — LAB KRIPTOGRAFI',
+    badgeClass: '',
+    blocks: ['tab2WorkbenchCard'],
+    blockClass: '',
+    anchorId: 'btnExecHackerAttack',
+    nextBtnId: 'btnExecHackerAttack',
+    preferredSide: 'top',
+    hasNext: false,
+    title: 'Uji Serangan Re-Hash & Truncation',
+    desc: 'Pilih salah satu dari 3 skenario manipulasi blok, amati efek Avalanche SHA-256 secara real-time, lalu jalankan uji untuk melihat penolakan HMAC-SHA256 & Segel Kepala.'
+  },
+  tab2_tampered: {
+    stepIdx: 4,
+    totalDots: 4,
+    badge: 'ANOMALI TERDETEKSI',
+    badgeClass: 'danger',
+    blocks: ['tab2ChainCard'],
+    blockClass: 'danger-focus',
+    anchorId: 'chainVisualWrap',
+    nextBtnId: 'btnRecoverLedgerTop',
+    preferredSide: 'top',
+    hasNext: false,
+    title: 'Rantai Terputus & Terverifikasi Rusak!',
+    desc: 'Pilih salah satu blok pada visualisasi rantai untuk memeriksa selisih HMAC-SHA256 64-hex, atau klik "Pulihkan Rantai Bersih" di kanan atas untuk mengulang.'
   }
 };
 
@@ -1512,26 +2413,36 @@ function setCoachVisibility(visible) {
   const hasPopover = Object.hasOwn(HTMLElement.prototype, 'popover') && typeof tip.showPopover === 'function';
   if (visible) {
     if (hasPopover) {
-      if (!tip.matches(':popover-open')) tip.showPopover();
-    } else {
-      tip.classList.add('open');
+      try {
+        if (!tip.matches(':popover-open')) tip.showPopover();
+        return;
+      } catch (_) {}
     }
+    tip.classList.add('open');
   } else {
     if (hasPopover) {
-      if (tip.matches(':popover-open')) tip.hidePopover();
-    } else {
-      tip.classList.remove('open');
+      try {
+        if (tip.matches(':popover-open')) tip.hidePopover();
+      } catch (_) {}
     }
+    tip.classList.remove('open');
   }
+}
+
+function getActiveGuideStageKey() {
+  if (currentMainTab === 2) {
+    return lastTab2GuideKey || 'tab2_step1';
+  }
+  return lastGuideStageKey === 'idle' ? 'prep1' : (lastGuideStageKey || 'prep1');
 }
 
 function positionCoachTooltip() {
   const tip = document.getElementById('coachTooltip');
-  if (!tip || !guideEnabled || guideDismissedForStage || currentMainTab !== 1) {
+  if (!tip || !guideEnabled || guideDismissedForStage || (currentMainTab !== 1 && currentMainTab !== 2)) {
     setCoachVisibility(false);
     return;
   }
-  const key = lastGuideStageKey === 'idle' ? 'prep1' : (lastGuideStageKey || 'prep1');
+  const key = getActiveGuideStageKey();
   const cfg = GUIDE_STAGES[key] || GUIDE_STAGES.prep1;
   let anchor = document.getElementById(cfg.anchorId);
   if ((!anchor || anchor.offsetParent === null) && cfg.fallbackAnchorId) {
@@ -1603,27 +2514,38 @@ function positionCoachTooltip() {
 }
 
 function updateMissionGuide(stageKey) {
-  const normalized = stageKey === 'idle' ? 'prep1' : stageKey;
-  if (normalized && normalized !== lastGuideStageKey) {
-    guideDismissedForStage = false;
+  const isTab2Stage = typeof stageKey === 'string' && stageKey.startsWith('tab2_');
+  if (isTab2Stage) {
+    if (stageKey !== lastTab2GuideKey) {
+      guideDismissedForStage = false;
+    }
+    lastTab2GuideKey = stageKey;
+  } else {
+    const normalized = stageKey === 'idle' ? 'prep1' : stageKey;
+    if (normalized && normalized !== lastGuideStageKey) {
+      guideDismissedForStage = false;
+    }
+    if (normalized) lastGuideStageKey = normalized;
   }
-  if (normalized) lastGuideStageKey = normalized;
-  const key = lastGuideStageKey || 'prep1';
+
+  const key = getActiveGuideStageKey();
   const cfg = GUIDE_STAGES[key] || GUIDE_STAGES.prep1;
 
-  ['guideTargetControls', 'guideTargetAttacker', 'guideTargetSoc', 'guideTargetPlacebo'].forEach(id => {
+  ['guideTargetControls', 'guideTargetAttacker', 'guideTargetSoc', 'guideTargetPlacebo', 'tab2Step1Card', 'tab2Step2Card', 'tab2WorkbenchCard', 'tab2ChainCard'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('guide-focus-block', 'danger-focus', 'ok-focus');
   });
-  ['btnStep1', 'btnStep2', 'btnStep3', 'btnStep4', 'btnStep5', 'btnModeWith', 'cveSelect', 'modeSwitchBox', 'btnOpenChronologyReport'].forEach(id => {
+  ['btnStep1', 'btnStep2', 'btnStep3', 'btnStep4', 'btnStep5', 'btnModeWith', 'cveSelect', 'modeSwitchBox', 'btnOpenChronologyReport', 'btnTab2Multihop', 'btnTab2Tamper', 'btnDocTamper1Byte', 'btnExecHackerAttack', 'btnRecoverLedgerTop'].forEach(id => {
     const b = document.getElementById(id);
     if (b) b.classList.remove('guide-next-btn');
   });
 
-  const toggleBtn = document.getElementById('btnToggleGuide');
-  if (toggleBtn) toggleBtn.textContent = guideEnabled ? '💡 Tooltip: ON' : '💡 Tooltip: OFF';
+  ['btnToggleGuide', 'btnToggleGuideTab2'].forEach(id => {
+    const toggleBtn = document.getElementById(id);
+    if (toggleBtn) toggleBtn.textContent = guideEnabled ? 'Panduan Tooltip: ON' : 'Panduan Tooltip: OFF';
+  });
 
-  if (!guideEnabled || currentMainTab !== 1) {
+  if (!guideEnabled || (currentMainTab !== 1 && currentMainTab !== 2)) {
     setCoachVisibility(false);
     return;
   }
@@ -1656,9 +2578,10 @@ function updateMissionGuide(stageKey) {
   if (desc) desc.textContent = cfg.desc;
   if (nextBtn) nextBtn.style.display = cfg.hasNext ? 'inline-block' : 'none';
   if (dots) {
-    dots.innerHTML = [1, 2, 3, 4, 5].map(n => {
+    const total = cfg.totalDots || 5;
+    dots.innerHTML = Array.from({ length: total }, (_, idx) => idx + 1).map(n => {
       if (key === 'step5') return '<span class="coach-dot done"></span>';
-      if (key === 'compromised' && n === 4) return '<span class="coach-dot danger"></span>';
+      if ((key === 'compromised' || key === 'tab2_tampered') && n === cfg.stepIdx) return '<span class="coach-dot danger"></span>';
       if (n < cfg.stepIdx) return '<span class="coach-dot done"></span>';
       if (n === cfg.stepIdx) return '<span class="coach-dot active"></span>';
       return '<span class="coach-dot"></span>';
@@ -1676,6 +2599,14 @@ function updateMissionGuide(stageKey) {
 }
 
 function advancePrepCoach() {
+  if (currentMainTab === 2) {
+    if (lastTab2GuideKey === 'tab2_step2') {
+      switchLedgerSubTab('doc');
+    } else if (lastTab2GuideKey === 'tab2_step3_doc') {
+      switchLedgerSubTab('hacker');
+    }
+    return;
+  }
   if (lastGuideStageKey === 'prep1' || lastGuideStageKey === 'idle') {
     updateMissionGuide('prep2');
   } else if (lastGuideStageKey === 'prep2') {
@@ -1691,11 +2622,11 @@ function dismissCoachTooltipTemporarily() {
 function toggleGuideMode() {
   guideEnabled = !guideEnabled;
   guideDismissedForStage = false;
-  updateMissionGuide(lastGuideStageKey);
+  updateMissionGuide(currentMainTab === 2 ? resolveTab2GuideKey() : lastGuideStageKey);
 }
 
 function scheduleCoachReposition() {
-  if (coachRafPending || !guideEnabled || guideDismissedForStage || currentMainTab !== 1) return;
+  if (coachRafPending || !guideEnabled || guideDismissedForStage || (currentMainTab !== 1 && currentMainTab !== 2)) return;
   coachRafPending = true;
   requestAnimationFrame(() => {
     coachRafPending = false;
@@ -3132,15 +4063,9 @@ function openChronologyDialog(focusStep = null) {
   }
 }
 
-function initChronologyDialog() {
-  const dlg = document.getElementById('chronologyDialog');
+function attachDialogBackdropFallback(dlg) {
   if (!dlg) return;
-
-  dlg.addEventListener('close', () => {
-    dlg.returnValue = '';
-  });
-
-  // Fallback untuk browser yang belum mendukung closedby="any" (mis. Safari)
+  dlg.addEventListener('close', () => { dlg.returnValue = ''; });
   if (!('closedBy' in HTMLDialogElement.prototype)) {
     const outside = (e, dialog) => {
       const r = dialog.getBoundingClientRect();
@@ -3150,6 +4075,13 @@ function initChronologyDialog() {
     dlg.addEventListener('pointerdown', (e) => { pressedOutside = outside(e, dlg); });
     dlg.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e, dlg)) dlg.close(); });
   }
+}
+
+function initChronologyDialog() {
+  const dlg = document.getElementById('chronologyDialog');
+  attachDialogBackdropFallback(dlg);
+  attachDialogBackdropFallback(document.getElementById('ledgerInspectDialog'));
+  if (!dlg) return;
 
   const copyBtn = document.getElementById('btnCopyChronology');
   if (copyBtn) {
