@@ -3,9 +3,10 @@ import json
 import mimetypes
 import re
 import shutil
+import signal
 import socket
 import sys
-import time
+import threading
 import urllib.error
 import urllib.request
 import uuid
@@ -251,8 +252,18 @@ def main() -> None:
         print(json.dumps(summary, indent=2))
         return
 
+    stop_event = threading.Event()
+
+    def _handle_shutdown(signum, _frame):
+        sig_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+        print(f"[Kertopati AI Agent] Menerima sinyal {sig_name}, menghentikan daemon dengan rapi...")
+        stop_event.set()
+
+    signal.signal(signal.SIGTERM, _handle_shutdown)
+    signal.signal(signal.SIGINT, _handle_shutdown)
+
     print(f"[Kertopati AI Agent] Memantau {args.watch_dir} -> {args.server_url} (interval {args.interval}s)")
-    while True:
+    while not stop_event.is_set():
         try:
             summary = run_agent_cycle(
                 server_url=args.server_url,
@@ -270,7 +281,8 @@ def main() -> None:
                 )
         except Exception as exc:
             print(f"[Kertopati AI Agent] Peringatan koneksi: {exc}")
-        time.sleep(args.interval)
+        stop_event.wait(timeout=args.interval)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

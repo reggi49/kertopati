@@ -669,7 +669,8 @@ def _exec_single_local_virtual_command(session: dict, sub_cmd: str) -> tuple[int
             if cmd_name in ("sha256sum", "shasum"):
                 out_chunks.append(f"{hashlib.sha256(data).hexdigest()}  {target}")
             elif cmd_name == "wc":
-                out_chunks.append(f"{data.count(b'\\n')} {len(data.split())} {len(data)} {target}")
+                line_count = data.count(b"\n")
+                out_chunks.append(f"{line_count} {len(data.split())} {len(data)} {target}")
             elif cmd_name == "strings":
                 strs = [m.decode("latin-1") for m in re.findall(rb"[\x20-\x7e]{4,}", data)[:200]]
                 out_chunks.append("\n".join(strs))
